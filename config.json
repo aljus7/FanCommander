@@ -1,0 +1,48 @@
+{
+    "settings": {
+        "refreshInterval": 2
+    },
+    
+    "tempSensors": [
+        {
+            "sensor": "CPU",
+            "path": "/sys/class/hwmon/hwmon3/temp1_input",
+            "graph": [
+                {"temp": 47, "pwm": 85},
+                {"temp": 50, "pwm": 100},
+                {"temp": 60, "pwm": 130},
+                {"temp": 70, "pwm": 200}
+            ]
+        },
+        {
+            "sensor": "GPU",
+            "path": "/sys/class/hwmon/hwmon6/temp1_label",
+            "graph": [
+                {"temp": 48, "pwm": 85},
+                {"temp": 50, "pwm": 100},
+                {"temp": 60, "pwm": 180},
+                {"temp": 70, "pwm": 200}
+            ]
+        }
+    ],
+
+    "fans": [
+        {
+            "fanControlPath": "/sys/class/hwmon/hwmon4/pwm4",
+            "fanRpmPath": "/sys/class/hwmon/hwmon4/fan4_input",
+            "sensors": ["GPU", "CPU"],
+            "sensorFunction": "MAX",
+            "minPwm": 60,
+            "maxPwm": 255
+        },
+        {
+            "fanControlPath": "/sys/class/hwmon/hwmon4/pwm1",
+            "fanRpmPath": "/sys/class/hwmon/hwmon4/fan1_input",
+            "sensors": ["GPU", "CPU"],
+            "sensorFunction": "MAX",
+            "minPwm": 60,
+            "maxPwm": 255
+        }
+    ]
+
+}

@@ -1,0 +1,50 @@
+#ifndef READJSON_H
+#define READJSON_H
+#include <string>
+#include <vector>
+#include <map>
+
+using namespace std;
+
+struct SoftwareParam {
+    int refreshInterval;
+};
+
+struct FanControlParam {
+    // Sensor data
+    vector<string> sensorNames;
+    vector<string> tempPaths;
+    vector<vector<pair<int, int>>> tempRpmGraphs;
+    // Fan data
+    vector<string> fanControlPaths;
+    vector<string> fanRpmPaths;
+    vector<vector<string>> sensors;
+    vector<string> sensorFunctions;
+    vector<int> minPwms;
+    vector<int> maxPwms;
+};
+
+class JsonConfigReader {
+    private:
+        string configPath;
+
+        int refresh_interval;
+
+        vector<string> name;
+        vector<string> tempPath;
+        vector<vector<pair<int, int>>> tempRpmGraph;
+
+        vector<string> fanControlPath;
+        vector<string> fanRpmPath;
+        vector<vector<string>> sensors;
+        vector<string> sensorFunc;
+        vector<int> minPwm;
+        vector<int> maxPwm;
+    public:
+        JsonConfigReader(string configPath);
+        void readJsonConfig();
+        void returnJsonConfig(FanControlParam* fanControlParam, SoftwareParam* softwareParam);
+        void printParsedJsonInStdout(FanControlParam* fanControlParam, SoftwareParam* softwareParam);
+};
+
+#endif
