@@ -18,11 +18,14 @@ using namespace std;
             string function;
             vector<int> rpms;
             int maxPwm;
+            int avgTimes;
+            vector<int> lastPwmValues;
+            int averaging(int pwm);
         protected:
             void getRpm();
             int getFanRpm();
         public: 
-            GetTemperature(vector<string> tempPath, vector<vector<pair<int, int>>> tempRpmGraph, string function, int maxPwm, vector<int> maxTemp); 
+            GetTemperature(vector<string> tempPath, vector<vector<pair<int, int>>> tempRpmGraph, string function, int maxPwm, vector<int> maxTemp, int avgTimes); 
     };
 
     class FanControl {
@@ -43,8 +46,8 @@ using namespace std;
         protected:
 
         public:
-            SetFans(vector<string> tempPath, vector<vector<pair<int, int>>> tempRpmGraph, string function, string fanPath, string rmpPath, int minPwm, int maxPwm, vector<int> maxTempGraph, int startPwm) : 
-            FanControl(fanPath, rmpPath, minPwm, maxPwm, startPwm), GetTemperature(tempPath, tempRpmGraph, function, maxPwm, maxTempGraph) {
+            SetFans(vector<string> tempPath, vector<vector<pair<int, int>>> tempRpmGraph, string function, string fanPath, string rmpPath, int minPwm, int maxPwm, vector<int> maxTempGraph, int startPwm, int avgTimes) : 
+            FanControl(fanPath, rmpPath, minPwm, maxPwm, startPwm), GetTemperature(tempPath, tempRpmGraph, function, maxPwm, maxTempGraph, avgTimes) {
 
             }
     };

@@ -1,6 +1,6 @@
 #include"fanControl.h"
 
-GetTemperature::GetTemperature(vector<string> tempPath, vector<vector<pair<int, int>>> tempRpmGraph, string function, int maxPwm, vector<int> maxTemp) {
+GetTemperature::GetTemperature(vector<string> tempPath, vector<vector<pair<int, int>>> tempRpmGraph, string function, int maxPwm, vector<int> maxTemp, int avgTimes) {
     if (tempPath.size() == tempRpmGraph.size()) {    
         this->tempSensor.resize(tempPath.size());
         for (int i = 0; i < tempPath.size(); i++) {
@@ -35,6 +35,35 @@ GetTemperature::GetTemperature(vector<string> tempPath, vector<vector<pair<int, 
     } else {
         cerr << "maxPwm was set over 255 value or under 1 value. (defaulting to 255)" << endl;
         this->maxPwm = 255;
+    }
+
+    this->avgTimes = avgTimes;
+
+}
+
+int GetTemperature::averaging(int pwm) {
+
+    int sum = 0;
+
+    if(this->lastPwmValues.size() > 1) {
+        if (this->lastPwmValues.size() < this->avgTimes) {
+            this->lastPwmValues[lastPwmValues.size()] = pwm;
+        } else {
+            if (this->lastPwmValues.size() == this->avgTimes) {
+                this->lastPwmValues.erase(this->lastPwmValues.begin());
+            }
+            this->lastPwmValues.push_back(pwm);
+        }
+
+        for (int i = 0; i < this->lastPwmValues.size(); i++) {
+            sum += lastPwmValues[i];
+        }
+        return sum/lastPwmValues.size();
+    } else if (this->lastPwmValues.size() == 1) {
+        return this->lastPwmValues[0];
+    } else {
+        cout << "Averafing error, averaging array is not populated yet." << endl;
+        return 255;
     }
 
 }
