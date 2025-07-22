@@ -6,6 +6,8 @@
 #include <vector>
 #include <iostream>
 #include <utility>
+#include <nlohmann/json.hpp>
+#include <cmath>
 
 using namespace std;
 
@@ -30,14 +32,18 @@ using namespace std;
 
     class FanControl {
         private:
-            vector<ifstream> fanControl;
-            vector<ifstream> rpmSensor;
-            int minPwmReal;
-            int startPwmReal;
+            string autoGenFileName = "fanSettingsAutoGenFile";
+            ofstream fanControl;
+            ifstream rpmSensor;
+            fstream fanSettingsAutoGenFile;
+            int minPwmGood;
+            int startPwmGood;
+            void writeMinStartPwm(fstream &file);
+            void waitForFanRpmToStabilize();
         protected:
 
         public: 
-            FanControl(string fanPath, string rmpPath, int minPwm, int maxPwm, int startPwm);
+            FanControl(string fanPath, string rpmPath, int minPwm, int maxPwm, int startPwm);
     };
 
     class SetFans : protected FanControl, protected GetTemperature {

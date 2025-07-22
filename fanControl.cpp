@@ -1,4 +1,7 @@
 #include"fanControl.h"
+#include <string>
+#include <thread>
+using json = nlohmann::json;
 
 GetTemperature::GetTemperature(vector<string> tempPath, vector<vector<pair<int, int>>> tempRpmGraph, string function, int maxPwm, vector<int> maxTemp, int avgTimes) {
     if (tempPath.size() == tempRpmGraph.size()) {    
@@ -72,6 +75,7 @@ void GetTemperature::getRpm() {
     vector<double> temps;
     string tempStr;
     for(int i = 0; i < this->tempSensor.size(); i++) {
+        this->tempSensor[i].seekg(0);
         if (getline(this->tempSensor[i], tempStr)) {
             try {
                 temps[i] = std::stod(tempStr)/100;
@@ -112,7 +116,7 @@ int GetTemperature::getFanRpm() {
             for (int i = 1; i < this->rpms.size(); i++) {
                     max = max > rpms[i] ? max : rpms[i];
             }
-            return max;
+            return averaging(max);
         }
 
         else if (this->function == "min" && !this->rpms.empty()) {
@@ -120,7 +124,7 @@ int GetTemperature::getFanRpm() {
             for (int i = 1; i < this->rpms.size(); i++) {
                     min = min < rpms[i] ? min : rpms[i];
             }
-            return min;
+            return averaging(min);
         }
 
         else if (this->function == "avg" && !this->rpms.empty()) {
@@ -130,7 +134,7 @@ int GetTemperature::getFanRpm() {
                 sum += rpms[i];
             }
             avg = sum/rpms.size();
-            return avg;
+            return averaging(avg);
         }
 
         else {
@@ -139,12 +143,93 @@ int GetTemperature::getFanRpm() {
         }
         
     } else {
-        return this->rpms[0];
+        return averaging(this->rpms[0]);
     }
 }
 
-FanControl::FanControl(string fanPath, string rmpPath, int minPwm, int maxPwm, int startPwm) {
+FanControl::FanControl(string fanPath, string rpmPath, int minPwm, int maxPwm, int startPwm) {
 
+    if (!fanPath.empty() && !rpmPath.empty()) {
+        this->fanControl.open(fanPath);
+        if(fanControl.is_open()) {
+            cout << "Fan control: " << fanPath << " successfully open!" << endl;
+        } else {
+
+        }
+        this->rpmSensor.open(rpmPath);
+        if (rpmSensor.is_open()) {
+            cout << "Fan sensor: " << rpmPath << " sucessfully open!" << endl;
+        } else {
+            
+        }
+    }
+
+    ifstream checkFile(this->autoGenFileName);
+    if (!checkFile.good()) {
+        
+        this->fanSettingsAutoGenFile.open(this->autoGenFileName, ios::out | ios::in);
+
+        this->fanSettingsAutoGenFile.close();
+
+    } else {
+
+        this->fanSettingsAutoGenFile.open(this->autoGenFileName, ios::out | ios::in);
+
+        this->fanSettingsAutoGenFile.close();
+
+    }
+
+}
+
+void FanControl::writeMinStartPwm(fstream &file) {
     
+    // calculating min pwm
+    this->fanControl.seekp(0);
+    this->fanControl << 255 << endl;
+    waitForFanRpmToStabilize();
+    for (int i = 255; i >= 0; i++) {
+        this->fanControl.seekp(0);
+        this->fanControl << i << endl;
+        waitForFanRpmToStabilize();
+        string rpm;
+        this->rpmSensor.seekg(0);
+        if (getline(this->rpmSensor, rpm)) {
+            if (stod(rpm) == 0) {
+                this->minPwmGood = i;
+                break;
+            }
+        }
+    }
 
+    // calculation start pwm
+    // to do
+
+    if(file.is_open()) {
+        json jObject;
+        json jArray = json::array();
+        
+    }
+        
+}
+
+void FanControl::waitForFanRpmToStabilize() {
+    string fanRpmStr;
+    int prevRpm = 256;
+    int diff;
+    int i = 0;
+    do {
+        this->rpmSensor.seekg(0);
+        if (getline(this->rpmSensor, fanRpmStr)) {
+            int fanRpm = stod(fanRpmStr);
+            if (prevRpm == 256) {    
+                prevRpm = fanRpm;
+                this_thread::sleep_for(std::chrono::milliseconds(1000));
+                diff = abs(prevRpm-fanRpm);
+            } else {
+                this_thread::sleep_for(std::chrono::milliseconds(1000));
+                diff = abs(prevRpm-fanRpm);
+            }
+            ++i;
+        }
+    } while(diff > 20 && i < 20);
 }
