@@ -55,7 +55,9 @@ void JsonConfigReader::readJsonConfig() {
             }
             this->sensors.push_back(sensors);
             this->sensorFunc.push_back(fan["sensorFunction"].get<string>());
+            this->avgTimes.push_back(fan["averageSampleSize"].get<int>());
             this->minPwm.push_back(fan["minPwm"].get<int>());
+            this->startPwm.push_back(fan["startPwm"].get<int>());
             this->maxPwm.push_back(fan["maxPwm"].get<int>());
         }
     } else {
@@ -74,7 +76,9 @@ void JsonConfigReader::returnJsonConfig(FanControlParam* fanControlParam, Softwa
     fanControlParam->fanRpmPaths = this->fanRpmPath;
     fanControlParam->sensors = this->sensors;
     fanControlParam->sensorFunctions = this->sensorFunc;
+    fanControlParam->avgTimes = this->avgTimes;
     fanControlParam->minPwms = this->minPwm;
+    fanControlParam->startPwms = this->startPwm;
     fanControlParam->maxPwms = this->maxPwm;
 }
 
@@ -104,7 +108,9 @@ void JsonConfigReader::printParsedJsonInStdout(FanControlParam* fcp, SoftwarePar
         }
         cout << endl;
         cout << "\tSensor function: " << fcp->sensorFunctions[i] << endl;
+        cout << "\tAveraging over: " << fcp->avgTimes[i] << " times" << endl;
         cout << "\tMin PWM: " << fcp->minPwms[i] << endl;
+        cout << "\tStart PWM: " << fcp->startPwms[i] << endl;
         cout << "\tMax PWM: " << fcp->maxPwms[i] << endl;
     }
     cout << endl << endl;

@@ -27,7 +27,8 @@ using namespace std;
             void getRpm();
             int getFanRpm();
         public: 
-            GetTemperature(vector<string> tempPath, vector<vector<pair<int, int>>> tempRpmGraph, string function, int maxPwm, vector<int> maxTemp, int avgTimes); 
+            GetTemperature(vector<string> tempPath, vector<vector<pair<int, int>>> tempRpmGraph, string function, int maxPwm, int avgTimes); 
+            ~GetTemperature();
     };
 
     class FanControl {
@@ -37,25 +38,32 @@ using namespace std;
             ifstream rpmSensor;
             fstream fanSettingsAutoGenFile;
             int minPwmGood;
+            int minPwm;
             int startPwmGood;
+            int startPwm;
+            int maxPwmGood;
             void writeMinStartPwm(fstream &file);
+            void getMinStartPwm(fstream &file);
             void waitForFanRpmToStabilize();
-        protected:
 
         public: 
             FanControl(string fanPath, string rpmPath, int minPwm, int maxPwm, int startPwm);
+            void setFanSpeed(int pwm);
+            ~FanControl();
     };
 
     class SetFans : protected FanControl, protected GetTemperature {
         private:
-
+            int fanRpm;
         protected:
 
         public:
-            SetFans(vector<string> tempPath, vector<vector<pair<int, int>>> tempRpmGraph, string function, string fanPath, string rmpPath, int minPwm, int maxPwm, vector<int> maxTempGraph, int startPwm, int avgTimes) : 
-            FanControl(fanPath, rmpPath, minPwm, maxPwm, startPwm), GetTemperature(tempPath, tempRpmGraph, function, maxPwm, maxTempGraph, avgTimes) {
+            SetFans(vector<string> tempPath, vector<vector<pair<int, int>>> tempRpmGraph, string function, string fanPath, string rmpPath, int minPwm, int maxPwm, int startPwm, int avgTimes) : 
+            FanControl(fanPath, rmpPath, minPwm, maxPwm, startPwm), GetTemperature(tempPath, tempRpmGraph, function, maxPwm, avgTimes) {
 
-            }
+            };
+            void declareFanRpmFromTempGraph();
+            void setFanSpeedFromDeclaredRpm();
     };
 
 #endif

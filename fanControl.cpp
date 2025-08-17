@@ -3,7 +3,7 @@
 #include <thread>
 using json = nlohmann::json;
 
-GetTemperature::GetTemperature(vector<string> tempPath, vector<vector<pair<int, int>>> tempRpmGraph, string function, int maxPwm, vector<int> maxTemp, int avgTimes) {
+GetTemperature::GetTemperature(vector<string> tempPath, vector<vector<pair<int, int>>> tempRpmGraph, string function, int maxPwm, int avgTimes) {
     if (tempPath.size() == tempRpmGraph.size()) {    
         this->tempSensor.resize(tempPath.size());
         for (int i = 0; i < tempPath.size(); i++) {
@@ -154,31 +154,59 @@ FanControl::FanControl(string fanPath, string rpmPath, int minPwm, int maxPwm, i
         if(fanControl.is_open()) {
             cout << "Fan control: " << fanPath << " successfully open!" << endl;
         } else {
-
+            throw std::runtime_error("Failed to open fan control file.");
         }
         this->rpmSensor.open(rpmPath);
         if (rpmSensor.is_open()) {
             cout << "Fan sensor: " << rpmPath << " sucessfully open!" << endl;
         } else {
-            
+            throw std::runtime_error("Failed to open rpm sensor file.");
         }
+    }
+
+    if (minPwm >= 0 && minPwm <= 255 && startPwm >= 0 && startPwm <= 255 && maxPwm <= 255 && maxPwm >= 0 && maxPwm != minPwm && startPwm != maxPwm) {
+        this->minPwm = minPwm;
+        this->startPwm = startPwm;
+        this->maxPwmGood = maxPwm;
+    } else {
+        cout << "ATENTION: Some of the values of min/start/max pwm do not match requirements! Default sane values used. Some of the values will be calculated." << endl;
+        this->minPwm = 0;
+        this->startPwm = 0;
+        this->maxPwmGood = 255;
     }
 
     ifstream checkFile(this->autoGenFileName);
     if (!checkFile.good()) {
         
         this->fanSettingsAutoGenFile.open(this->autoGenFileName, ios::out | ios::in);
-
+        getMinStartPwm(fanSettingsAutoGenFile);
         this->fanSettingsAutoGenFile.close();
 
     } else {
 
         this->fanSettingsAutoGenFile.open(this->autoGenFileName, ios::out | ios::in);
-
+        writeMinStartPwm(fanSettingsAutoGenFile);
         this->fanSettingsAutoGenFile.close();
 
     }
 
+}
+
+void FanControl::getMinStartPwm(fstream &file) {
+    string savedSettingsJson;
+    if (file.is_open()) {
+        string line;
+        while (getline (file, line)) {
+            savedSettingsJson += line;
+        }
+        json savedVal = json::parse(savedSettingsJson);
+        this->minPwmGood = savedVal["minPwm"].get<int>();
+        this->startPwmGood = savedVal["startPwm"].get<int>();
+        this->maxPwmGood = savedVal["maxPwm"].get<int>();
+    } else {
+        std::cerr << "File is not open!" << std::endl;
+        throw std::runtime_error("Failed to open saved values file.");
+    }
 }
 
 void FanControl::writeMinStartPwm(fstream &file) {
@@ -187,7 +215,7 @@ void FanControl::writeMinStartPwm(fstream &file) {
     this->fanControl.seekp(0);
     this->fanControl << 255 << endl;
     waitForFanRpmToStabilize();
-    for (int i = 255; i >= 0; i++) {
+    for (int i = 255; i >= 0; i--) {
         this->fanControl.seekp(0);
         this->fanControl << i << endl;
         waitForFanRpmToStabilize();
@@ -201,13 +229,41 @@ void FanControl::writeMinStartPwm(fstream &file) {
         }
     }
 
-    // calculation start pwm
-    // to do
+    // calculationg start pwm
+    for (int i = 0; i < 255; i++) {
+        this->fanControl.seekp(0);
+        this->fanControl << i << endl;
+        waitForFanRpmToStabilize();
+        string rpm;
+        this->rpmSensor.seekg(0);
+        if (getline(this->rpmSensor, rpm)) {
+            if (stod(rpm) > 0) {
+                this->startPwmGood = i;
+                break;
+            }
+        }
+    }
+
+    if (this->startPwm > this->startPwmGood) {
+        cout << "Custom StartPwm value set that is higher than real one, using custiom value" << endl;
+        this->startPwmGood = this->startPwm;
+    }
+
+    if (this->minPwm > this->minPwmGood) {
+        cout << "Custom MinPwm value set that is higher than real one, using custiom value" << endl;
+        this->minPwmGood = this->minPwm;
+    }
 
     if(file.is_open()) {
         json jObject;
-        json jArray = json::array();
-        
+        jObject["minPwm"] = this->minPwmGood;
+        jObject["startPwm"] = this->startPwmGood;
+        jObject["maxPwm"] = this->maxPwmGood;
+
+        file << jObject.dump(4);
+    } else {
+        std::cerr << "File is not open!" << std::endl;
+        throw std::runtime_error("Failed to open saved values file.");
     }
         
 }
@@ -232,4 +288,53 @@ void FanControl::waitForFanRpmToStabilize() {
             ++i;
         }
     } while(diff > 20 && i < 20);
+}
+
+void FanControl::setFanSpeed(int pwm) {
+    if (fanControl.is_open()) {
+        if (pwm <= 255 && pwm >= 0) {
+            fanControl.seekp(0);
+            fanControl << pwm << endl;
+        } else {
+            cerr << "PWM value must be between 0 and 255." << endl;
+            throw std::out_of_range("PWM value must be between 0 and 255.");
+        }
+    } else {
+        cerr << "Fancontrol cant set fanspeed, fanRpmPath file not open anymore." << endl;
+        throw std::runtime_error("Failed to open fan control file.");
+    }
+}
+
+
+
+void SetFans::declareFanRpmFromTempGraph() {
+    getRpm();
+    this->fanRpm = getFanRpm();
+}
+
+void SetFans::setFanSpeedFromDeclaredRpm() {
+    setFanSpeed(this->fanRpm);
+}
+
+
+
+GetTemperature::~GetTemperature() {
+    for (auto &sensor : this->tempSensor) {
+        if(sensor.is_open()) {
+            sensor.close();
+        }
+    }
+}
+
+FanControl::~FanControl() {
+
+    if (this->fanControl.is_open())
+        this->fanControl.close();
+
+    if (this->rpmSensor.is_open())
+        this->rpmSensor.close();
+
+    if (this->fanSettingsAutoGenFile.is_open())
+        this->fanSettingsAutoGenFile.close();
+
 }

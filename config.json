@@ -32,7 +32,9 @@
             "fanRpmPath": "/sys/class/hwmon/hwmon4/fan4_input",
             "sensors": ["GPU", "CPU"],
             "sensorFunction": "MAX",
+            "averageSampleSize" : 3,
             "minPwm": 60,
+            "startPwm": 70,
             "maxPwm": 255
         },
         {
@@ -40,7 +42,9 @@
             "fanRpmPath": "/sys/class/hwmon/hwmon4/fan1_input",
             "sensors": ["GPU", "CPU"],
             "sensorFunction": "MAX",
+            "averageSampleSize" : 3,
             "minPwm": 60,
+            "startPwm": 70,
             "maxPwm": 255
         }
     ]

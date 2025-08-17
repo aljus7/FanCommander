@@ -20,7 +20,9 @@ struct FanControlParam {
     vector<string> fanRpmPaths;
     vector<vector<string>> sensors;
     vector<string> sensorFunctions;
+    vector<int> avgTimes;
     vector<int> minPwms;
+    vector<int> startPwms;
     vector<int> maxPwms;
 };
 
@@ -38,7 +40,9 @@ class JsonConfigReader {
         vector<string> fanRpmPath;
         vector<vector<string>> sensors;
         vector<string> sensorFunc;
+        vector<int> avgTimes;
         vector<int> minPwm;
+        vector<int> startPwm;
         vector<int> maxPwm;
     public:
         JsonConfigReader(string configPath);
