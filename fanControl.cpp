@@ -95,7 +95,7 @@ void GetTemperature::getRpm() {
     // first = temp , second = rpm;
     const int &temp = temps[j];
     vector<pair<int, int>> currGraph = tempRpmGraph[j];
-    cout << "Current temp: " << temp << endl;
+    //cout << "Current temp: " << temp << endl;
         bool matched = false;
         for (int i = 0; i < currGraph.size(); ++i) {
             if (i == 0 && temp <= currGraph[i].first) {
@@ -115,28 +115,9 @@ void GetTemperature::getRpm() {
         if (!matched) {
             this->rpms[j] = currGraph.back().second;
         }
-        cout << "Interpolated graph values value: " << this->rpms[j] << endl;
+        //cout << "Interpolated graph values value: " << this->rpms[j] << endl;
     }
 
-
-    /*for (int j = 0; j < temps.size(); j++) {
-        // first = temp , second = rpm;
-        const int &temp = temps[j];
-        vector<pair<int, int>> currGraph = tempRpmGraph[j];
-        cout << "Current temp: " << temp << endl;
-
-        for (int i = 0; i < currGraph.size(); i++) {
-            if (i == 0 && temp <= currGraph[i].first) { // bottom shelf.
-                this->rpms[j] = currGraph[i].second;
-                break;
-            } else {
-                if (temp <= currGraph[i].first)
-                    this->rpms[j] = currGraph[i-1].second + ((temp - currGraph[i-1].first)*(currGraph[i].second-currGraph[i-1].second))/(currGraph[i].first-currGraph[i-1].first);
-            }
-        }
-        cout << "Interpolated graph values value: " << this->rpms[j] << endl;
-    }
-    cout << endl;*/
 }
 
 int GetTemperature::getFanRpm() {
