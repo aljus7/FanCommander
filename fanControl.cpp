@@ -189,7 +189,7 @@ FanControl::FanControl(string fanPath, string rpmPath, int minPwm, int maxPwm, i
     }
 
     regex nonDigit("[^0-9]+");
-    string autoGenFileName = regex_replace(this->fanNamePath, nonDigit, "") + this->autoGenFileAppend;
+    string autoGenFileName = this->stateFilesPath + regex_replace(this->fanNamePath, nonDigit, "") + this->autoGenFileAppend;
 
     std::ifstream checkFile(autoGenFileName);
     bool fileExists = checkFile.good();
@@ -305,7 +305,7 @@ void FanControl::waitForFanRpmToStabilize() {
     do {
         this->rpmSensor.seekg(0);
         if (getline(this->rpmSensor, fanRpmStr)) {
-            int fanRpm = stod(fanRpmStr);
+            int fanRpm = stoi(fanRpmStr);
             if (prevRpm == 256) {    
                 prevRpm = fanRpm;
                 this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -313,6 +313,7 @@ void FanControl::waitForFanRpmToStabilize() {
             } else {
                 this_thread::sleep_for(std::chrono::milliseconds(1000));
                 diff = abs(prevRpm-fanRpm);
+                prevRpm = fanRpm;
             }
             ++i;
         }

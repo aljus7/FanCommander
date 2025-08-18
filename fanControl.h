@@ -35,6 +35,7 @@ using namespace std;
         private:
             string const autoGenFileAppend = "_fanSettings";
             string fanNamePath;
+            const string stateFilesPath = "/var/lib/fanCommander/";
 
             ofstream fanControl;
             ifstream rpmSensor;

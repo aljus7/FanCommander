@@ -5,7 +5,7 @@
 #include <atomic>
 #include <csignal>
 using namespace std;
-const string jsonConfigLocation = "config.json";
+const string jsonConfigLocation = "/etc/fanCommander/config.json";
 
 atomic<bool> keepRunning(true);
 
@@ -65,8 +65,8 @@ int main() {
         for (auto &fan : setFans) {
             fan->declareFanRpmFromTempGraph();
             fan->setFanSpeedFromDeclaredRpm();
-            this_thread::sleep_for(std::chrono::milliseconds(refreshTime));
         }
+        this_thread::sleep_for(std::chrono::milliseconds(refreshTime));
     }
 
     std::cout << "Exiting gracefully...\n";
