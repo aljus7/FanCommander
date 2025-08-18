@@ -2,10 +2,21 @@
 #include "fanControl.h"
 #include <chrono>
 #include <thread>
+#include <atomic>
+#include <csignal>
 using namespace std;
 const string jsonConfigLocation = "config.json";
 
+atomic<bool> keepRunning(true);
+
+void signalHandler(int signum) {
+    cout << "\nInterrupt signal (" << signum << ") received.\n";
+    keepRunning = false;
+}
+
 int main() {
+    signal(SIGINT, signalHandler);  // Handle Ctrl+C
+    signal(SIGTERM, signalHandler); // Handle kill/pkill
 
     SoftwareParam *softwareParam = new SoftwareParam();
     FanControlParam *fanControlParam = new FanControlParam();
@@ -38,9 +49,15 @@ int main() {
 
     int refreshTime = softwareParam->refreshInterval;
 
-    for (auto &fan : setFans) {
-        fan->declareFanRpmFromTempGraph();
-        fan->setFanSpeedFromDeclaredRpm();
-        this_thread::sleep_for(std::chrono::seconds(refreshTime));
+    while (keepRunning) {
+        for (auto &fan : setFans) {
+            fan->declareFanRpmFromTempGraph();
+            fan->setFanSpeedFromDeclaredRpm();
+            this_thread::sleep_for(std::chrono::milliseconds(refreshTime));
+        }
     }
+
+    std::cout << "Exiting gracefully.\n";
+    return 0;
+
 }

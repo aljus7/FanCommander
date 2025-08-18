@@ -1,6 +1,6 @@
 {
     "settings": {
-        "refreshInterval": 2
+        "refreshInterval": 500
     },
     
     "tempSensors": [
@@ -8,20 +8,20 @@
             "sensor": "CPU",
             "path": "/sys/class/hwmon/hwmon3/temp1_input",
             "graph": [
-                {"temp": 47, "pwm": 85},
+                {"temp": 48, "pwm": 85},
                 {"temp": 50, "pwm": 100},
                 {"temp": 60, "pwm": 130},
-                {"temp": 70, "pwm": 200}
+                {"temp": 70, "pwm": 255}
             ]
         },
         {
             "sensor": "GPU",
-            "path": "/sys/class/hwmon/hwmon6/temp1_label",
+            "path": "/sys/class/hwmon/hwmon6/temp1_input",
             "graph": [
                 {"temp": 48, "pwm": 85},
                 {"temp": 50, "pwm": 100},
                 {"temp": 60, "pwm": 180},
-                {"temp": 70, "pwm": 200}
+                {"temp": 70, "pwm": 255}
             ]
         }
     ],
@@ -31,8 +31,8 @@
             "fanControlPath": "/sys/class/hwmon/hwmon4/pwm4",
             "fanRpmPath": "/sys/class/hwmon/hwmon4/fan4_input",
             "sensors": ["GPU", "CPU"],
-            "sensorFunction": "MAX",
-            "averageSampleSize" : 3,
+            "sensorFunction": "max",
+            "averageSampleSize" : 10,
             "minPwm": 60,
             "startPwm": 70,
             "maxPwm": 255
@@ -41,8 +41,8 @@
             "fanControlPath": "/sys/class/hwmon/hwmon4/pwm1",
             "fanRpmPath": "/sys/class/hwmon/hwmon4/fan1_input",
             "sensors": ["GPU", "CPU"],
-            "sensorFunction": "MAX",
-            "averageSampleSize" : 3,
+            "sensorFunction": "max",
+            "averageSampleSize" : 10,
             "minPwm": 60,
             "startPwm": 70,
             "maxPwm": 255

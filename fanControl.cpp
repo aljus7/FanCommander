@@ -42,43 +42,42 @@ GetTemperature::GetTemperature(vector<string> tempPath, vector<vector<pair<int, 
 
     this->avgTimes = avgTimes;
 
+    this->rpms.resize(tempPath.size());
+
 }
 
 int GetTemperature::averaging(int pwm) {
-
     int sum = 0;
 
-    if(this->lastPwmValues.size() > 1) {
-        if (this->lastPwmValues.size() < this->avgTimes) {
-            this->lastPwmValues[lastPwmValues.size()] = pwm;
-        } else {
-            if (this->lastPwmValues.size() == this->avgTimes) {
-                this->lastPwmValues.erase(this->lastPwmValues.begin());
-            }
-            this->lastPwmValues.push_back(pwm);
-        }
-
-        for (int i = 0; i < this->lastPwmValues.size(); i++) {
-            sum += lastPwmValues[i];
-        }
-        return sum/lastPwmValues.size();
-    } else if (this->lastPwmValues.size() == 1) {
-        return this->lastPwmValues[0];
+    // Add the new PWM value to the list
+    if (this->lastPwmValues.size() < this->avgTimes) {
+        this->lastPwmValues.push_back(pwm);
     } else {
-        cout << "Averafing error, averaging array is not populated yet." << endl;
-        return 255;
+        // Maintain fixed size: remove oldest, add newest
+        this->lastPwmValues.erase(this->lastPwmValues.begin());
+        this->lastPwmValues.push_back(pwm);
     }
 
+    // Compute average if we have at least one value
+    if (!this->lastPwmValues.empty()) {
+        for (int value : this->lastPwmValues) {
+            sum += value;
+        }
+        return sum / this->lastPwmValues.size();
+    } else {
+        std::cerr << "Averaging error: array is not populated yet." << std::endl;
+        return 255;
+    }
 }
 
 void GetTemperature::getRpm() {
-    vector<double> temps;
+    vector<int> temps(this->tempSensor.size());
     string tempStr;
     for(int i = 0; i < this->tempSensor.size(); i++) {
         this->tempSensor[i].seekg(0);
         if (getline(this->tempSensor[i], tempStr)) {
             try {
-                temps[i] = std::stod(tempStr)/100;
+                temps[i] = std::stod(tempStr)/1000;
             } catch (const std::invalid_argument& e) {
                 std::cerr << "Invalid argument: " << e.what() << std::endl;
             } catch (const std::out_of_range& e) {
@@ -90,10 +89,40 @@ void GetTemperature::getRpm() {
 
     }
 
+
     for (int j = 0; j < temps.size(); j++) {
+    // first = temp , second = rpm;
+    const int &temp = temps[j];
+    vector<pair<int, int>> currGraph = tempRpmGraph[j];
+    cout << "Current temp: " << temp << endl;
+        bool matched = false;
+        for (int i = 0; i < currGraph.size(); ++i) {
+            if (i == 0 && temp <= currGraph[i].first) {
+                this->rpms[j] = currGraph[i].second;
+                matched = true;
+                break;
+            } else if (temp <= currGraph[i].first) {
+                this->rpms[j] = currGraph[i - 1].second +
+                    ((temp - currGraph[i - 1].first) * (currGraph[i].second - currGraph[i - 1].second)) /
+                    (currGraph[i].first - currGraph[i - 1].first);
+                matched = true;
+                break;
+            }
+        }
+
+        // Fallback if no match was found
+        if (!matched) {
+            this->rpms[j] = currGraph.back().second;
+        }
+        cout << "Interpolated graph values value: " << this->rpms[j] << endl;
+    }
+
+
+    /*for (int j = 0; j < temps.size(); j++) {
         // first = temp , second = rpm;
         const int &temp = temps[j];
         vector<pair<int, int>> currGraph = tempRpmGraph[j];
+        cout << "Current temp: " << temp << endl;
 
         for (int i = 0; i < currGraph.size(); i++) {
             if (i == 0 && temp <= currGraph[i].first) { // bottom shelf.
@@ -104,8 +133,9 @@ void GetTemperature::getRpm() {
                     this->rpms[j] = currGraph[i-1].second + ((temp - currGraph[i-1].first)*(currGraph[i].second-currGraph[i-1].second))/(currGraph[i].first-currGraph[i-1].first);
             }
         }
+        cout << "Interpolated graph values value: " << this->rpms[j] << endl;
     }
-
+    cout << endl;*/
 }
 
 int GetTemperature::getFanRpm() {
@@ -175,20 +205,30 @@ FanControl::FanControl(string fanPath, string rpmPath, int minPwm, int maxPwm, i
         this->maxPwmGood = 255;
     }
 
-    ifstream checkFile(this->autoGenFileName);
-    if (!checkFile.good()) {
-        
-        this->fanSettingsAutoGenFile.open(this->autoGenFileName, ios::out | ios::in);
-        getMinStartPwm(fanSettingsAutoGenFile);
-        this->fanSettingsAutoGenFile.close();
+    std::ifstream checkFile(autoGenFileName);
+    bool fileExists = checkFile.good();
+    checkFile.close();
 
-    } else {
-
-        this->fanSettingsAutoGenFile.open(this->autoGenFileName, ios::out | ios::in);
-        writeMinStartPwm(fanSettingsAutoGenFile);
-        this->fanSettingsAutoGenFile.close();
-
+    // Open with trunc if file doesn't exist, else open normally
+    std::ios_base::openmode mode = std::ios::in | std::ios::out;
+    if (!fileExists) {
+    mode |= std::ios::trunc; // Create new file
     }
+
+    fanSettingsAutoGenFile.open(autoGenFileName, mode);
+
+    if (!fanSettingsAutoGenFile.is_open()) {
+    std::cerr << "Failed to open file: " << autoGenFileName << std::endl;
+    return;
+    }
+
+    if (fileExists) {
+    getMinStartPwm(fanSettingsAutoGenFile);
+    } else {
+    writeMinStartPwm(fanSettingsAutoGenFile);
+    }
+
+    fanSettingsAutoGenFile.close();
 
 }
 
