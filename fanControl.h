@@ -35,6 +35,7 @@ using namespace std;
         private:
             string const autoGenFileName = "_settings";
             string fanNamePath;
+            
             ofstream fanControl;
             ifstream rpmSensor;
             fstream fanSettingsAutoGenFile;
