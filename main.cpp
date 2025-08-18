@@ -27,11 +27,14 @@ int main() {
     jsonConfigReader->printParsedJsonInStdout(fanControlParam, softwareParam);
     
     vector<SetFans*> setFans;
+    vector<string> fanModePaths;
 
     for (int i = 0; i < fanControlParam->fanControlPaths.size(); i++) {
         
         vector<string> buildTempTempPaths;
         vector<vector<pair<int, int>>> buildTempTempRpmGraphs;
+
+        fanModePaths.push_back(fanControlParam->fanControlPaths[i] + "_mode");
 
         for (int j = 0; j < fanControlParam->sensors[i].size(); j++) {
             string sensorName = fanControlParam->sensors[i][j];
@@ -47,6 +50,21 @@ int main() {
         fanControlParam->minPwms[i], fanControlParam->maxPwms[i], fanControlParam->startPwms[i], fanControlParam->avgTimes[i]));
     }
 
+    // set fan mode to 1 which means full manual control with pwm
+    for (const auto &fanModePath : fanModePaths) {
+
+        ofstream modeFile(fanModePath);
+
+        if (modeFile.is_open()) {
+            modeFile.seekp(0);
+            modeFile << 1 << endl;
+            modeFile.close();
+        } else {
+            throw std::runtime_error("Failed to open fan mode file.");
+        }
+
+    }
+
     int refreshTime = softwareParam->refreshInterval;
 
     while (keepRunning) {
@@ -57,7 +75,23 @@ int main() {
         }
     }
 
-    std::cout << "Exiting gracefully.\n";
+    std::cout << "Exiting gracefully...\n";
+    
+    // set fan mode to 2 which means automatic bios control
+    for (const auto &fanModePath : fanModePaths) {
+
+        ofstream modeFile(fanModePath);
+
+        if (modeFile.is_open()) {
+            modeFile.seekp(0);
+            modeFile << 2 << endl;
+            modeFile.close();
+        } else {
+            throw std::runtime_error("Failed to open fan mode file.");
+        }
+
+    }
+
     return 0;
 
 }
