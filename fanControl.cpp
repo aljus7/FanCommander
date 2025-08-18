@@ -1,4 +1,5 @@
 #include"fanControl.h"
+#include <regex>
 #include <string>
 #include <thread>
 using json = nlohmann::json;
@@ -206,7 +207,8 @@ FanControl::FanControl(string fanPath, string rpmPath, int minPwm, int maxPwm, i
         this->maxPwmGood = 255;
     }
 
-    string autoGenFileName = this->fanNamePath + this->autoGenFileName;
+    regex nonDigit("[^0-9]+");
+    string autoGenFileName = regex_replace(this->fanNamePath, nonDigit, "") + this->autoGenFileAppend;
 
     std::ifstream checkFile(autoGenFileName);
     bool fileExists = checkFile.good();
@@ -266,6 +268,9 @@ void FanControl::writeMinStartPwm(fstream &file) {
         this->rpmSensor.seekg(0);
         if (getline(this->rpmSensor, rpm)) {
             if (stod(rpm) == 0) {
+                this->minPwmGood = i;
+                break;
+            } else if (i == 0) {
                 this->minPwmGood = i;
                 break;
             }

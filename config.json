@@ -1,6 +1,6 @@
 {
     "settings": {
-        "refreshInterval": 500
+        "refreshInterval": 1000
     },
     
     "tempSensors": [

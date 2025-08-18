@@ -33,9 +33,9 @@ using namespace std;
 
     class FanControl {
         private:
-            string const autoGenFileName = "_settings";
+            string const autoGenFileAppend = "_fanSettings";
             string fanNamePath;
-            
+
             ofstream fanControl;
             ifstream rpmSensor;
             fstream fanSettingsAutoGenFile;
