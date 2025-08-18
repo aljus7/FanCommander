@@ -330,11 +330,47 @@ void FanControl::waitForFanRpmToStabilize() {
     } while(diff > 20 && i < 20);
 }
 
+void FanControl::getFeedbackRpm() {
+    string rpmString;
+    int fanRpm;
+
+    if (this->rpmSensor.is_open()) {
+        this->rpmSensor.seekg(0);
+        if (getline(this->rpmSensor, rpmString)) {
+            fanRpm = stod(rpmString);
+        } else {
+            cerr << "couldnt getline from rpm fan feedback file" << endl;
+            fanRpm = 255;
+        }
+    } else {
+        throw std::runtime_error("Failed to open fan rpm feedback file.");
+    }
+
+    this->feedBackRpm = fanRpm;
+}
+
 void FanControl::setFanSpeed(int pwm) {
+    getFeedbackRpm();
+
     if (fanControl.is_open()) {
         if (pwm <= 255 && pwm >= 0) {
-            fanControl.seekp(0);
-            fanControl << pwm << endl;
+            if (pwm >= this->minPwmGood && this->feedBackRpm == 0) {
+                if (255 - this->startPwmGood > 10)  {   
+                    fanControl.seekp(0);
+                    fanControl << this->startPwmGood + 10 << endl;
+                } else {
+                    fanControl.seekp(0);
+                    fanControl << this->startPwmGood << endl;
+                }
+            }
+            
+            if (pwm >= this->minPwmGood) {    
+                fanControl.seekp(0);
+                fanControl << pwm << endl;
+            } else {
+                fanControl.seekp(0);
+                fanControl << this->minPwmGood << endl;
+            }
         } else {
             cerr << "PWM value must be between 0 and 255." << endl;
             throw std::out_of_range("PWM value must be between 0 and 255.");

@@ -46,9 +46,11 @@ using namespace std;
             void getMinStartPwm(fstream &file);
             void waitForFanRpmToStabilize();
 
+            int feedBackRpm;
         public: 
             FanControl(string fanPath, string rpmPath, int minPwm, int maxPwm, int startPwm);
             void setFanSpeed(int pwm);
+            void getFeedbackRpm();
             ~FanControl();
     };
 
