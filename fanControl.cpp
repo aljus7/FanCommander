@@ -180,6 +180,7 @@ int GetTemperature::getFanRpm() {
 FanControl::FanControl(string fanPath, string rpmPath, int minPwm, int maxPwm, int startPwm) {
 
     if (!fanPath.empty() && !rpmPath.empty()) {
+        this->fanNamePath = fanPath;
         this->fanControl.open(fanPath);
         if(fanControl.is_open()) {
             cout << "Fan control: " << fanPath << " successfully open!" << endl;
@@ -204,6 +205,8 @@ FanControl::FanControl(string fanPath, string rpmPath, int minPwm, int maxPwm, i
         this->startPwm = 0;
         this->maxPwmGood = 255;
     }
+
+    string autoGenFileName = this->fanNamePath + this->autoGenFileName;
 
     std::ifstream checkFile(autoGenFileName);
     bool fileExists = checkFile.good();
@@ -363,7 +366,7 @@ void FanControl::setFanSpeed(int pwm) {
                     fanControl << this->startPwmGood << endl;
                 }
             }
-            
+
             if (pwm >= this->minPwmGood) {    
                 fanControl.seekp(0);
                 fanControl << pwm << endl;
