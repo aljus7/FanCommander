@@ -1,4 +1,5 @@
 #include"fanControl.h"
+#include <numeric>
 #include <regex>
 #include <string>
 #include <thread>
@@ -50,14 +51,11 @@ GetTemperature::GetTemperature(vector<string> tempPath, vector<vector<pair<int, 
 int GetTemperature::averaging(int pwm) {
     int sum = 0;
 
-    // Add the new PWM value to the list
-    if (this->lastPwmValues.size() < this->avgTimes) {
-        this->lastPwmValues.push_back(pwm);
-    } else {
-        // Maintain fixed size: remove oldest, add newest
-        this->lastPwmValues.erase(this->lastPwmValues.begin());
-        this->lastPwmValues.push_back(pwm);
-    }
+    // simplification using <deque>
+    this->lastPwmValues.push_back(pwm);
+    if (this->lastPwmValues.size() > this->avgTimes) {
+        this->lastPwmValues.pop_front();
+    } 
 
     // Compute average if we have at least one value
     if (!this->lastPwmValues.empty()) {

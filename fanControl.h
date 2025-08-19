@@ -8,6 +8,7 @@
 #include <utility>
 #include <nlohmann/json.hpp>
 #include <cmath>
+#include <deque>
 
 using namespace std;
 
@@ -21,7 +22,7 @@ using namespace std;
             vector<int> rpms;
             int maxPwm;
             int avgTimes;
-            vector<int> lastPwmValues;
+            deque<int> lastPwmValues;
             int averaging(int pwm);
         protected:
             void getRpm();
