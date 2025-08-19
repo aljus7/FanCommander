@@ -89,31 +89,27 @@ void GetTemperature::getRpm() {
     }
 
 
-    for (int j = 0; j < temps.size(); j++) {
-    // first = temp , second = rpm;
-    const int &temp = temps[j];
-    vector<pair<int, int>> currGraph = tempRpmGraph[j];
-    //cout << "Current temp: " << temp << endl;
-        bool matched = false;
-        for (int i = 0; i < currGraph.size(); ++i) {
-            if (i == 0 && temp <= currGraph[i].first) {
-                this->rpms[j] = currGraph[i].second;
-                matched = true;
-                break;
-            } else if (temp <= currGraph[i].first) {
-                this->rpms[j] = currGraph[i - 1].second +
-                    ((temp - currGraph[i - 1].first) * (currGraph[i].second - currGraph[i - 1].second)) /
-                    (currGraph[i].first - currGraph[i - 1].first);
-                matched = true;
+    for (size_t j = 0; j < temps.size(); ++j) {
+        const int temp = temps[j];
+        const auto& currGraph = tempRpmGraph[j]; // Cache tempRpmGraph[j] as const reference
+        int& rpm = this->rpms[j];
+
+        for (size_t i = 0; i < currGraph.size(); ++i) {
+            if (temp <= currGraph[i].first) {
+                if (i == 0) {
+                    rpm = currGraph[0].second;
+                } else {
+                    const auto& prev = currGraph[i - 1];
+                    const auto& curr = currGraph[i];
+                    rpm = prev.second + ((temp - prev.first) * (curr.second - prev.second)) / (curr.first - prev.first);
+                }
                 break;
             }
         }
 
-        // Fallback if no match was found
-        if (!matched) {
-            this->rpms[j] = currGraph.back().second;
+        if (temp > currGraph.back().first) {
+            rpm = currGraph.back().second;
         }
-        //cout << "Interpolated graph values value: " << this->rpms[j] << endl;
     }
 
 }
