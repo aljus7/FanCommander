@@ -1,5 +1,4 @@
 #include"fanControl.h"
-#include <numeric>
 #include <regex>
 #include <string>
 #include <thread>
