@@ -1,15 +1,17 @@
 #include"fanControl.h"
+#include <functional>
 #include <regex>
 #include <string>
 #include <thread>
+#include <utility>
 using json = nlohmann::json;
 
-GetTemperature::GetTemperature(vector<string> tempPath, vector<vector<pair<int, int>>> tempRpmGraph, string function, int maxPwm, int avgTimes) {
+GetTemperature::GetTemperature(vector<string> tempPath, vector<vector<pair<int, int>>> tempRpmGraph, string function, int maxPwm, int avgTimes, TempSensorServer* tmpSrv) {
     if (tempPath.size() == tempRpmGraph.size()) {    
-        this->tempSensor.resize(tempPath.size());
+        //this->tempSensor.resize(tempPath.size());
         for (int i = 0; i < tempPath.size(); i++) {
             if (tempPath[i] != "null" && !tempPath[i].empty())
-                this->tempSensor[i].open(tempPath[i]);
+                this->tempSensor.emplace_back(ref(tmpSrv->getTempSenseIfstream(tempPath[i])));
         }
 
         if (!tempRpmGraph.empty()) {
@@ -69,11 +71,22 @@ int GetTemperature::averaging(int pwm) {
 }
 
 void GetTemperature::getRpm() {
+    // Check for size mismatch
+    if (this->tempSensor.size() != this->tempRpmGraph.size()) {
+        std::cerr << "Size mismatch: tempSensor.size() != tempRpmGraph.size()" << std::endl;
+        return;
+    }
     vector<int> temps(this->tempSensor.size());
     string tempStr;
     for(int i = 0; i < this->tempSensor.size(); i++) {
-        this->tempSensor[i].seekg(0);
-        if (getline(this->tempSensor[i], tempStr)) {
+        // Check if stream is open
+        if (!this->tempSensor[i].get().is_open()) {
+            std::cerr << "Temperature sensor stream " << i << " is not open!" << std::endl;
+            temps[i] = 0;
+            continue;
+        }
+        this->tempSensor[i].get().seekg(0);
+        if (getline(this->tempSensor[i].get(), tempStr)) {
             try {
                 temps[i] = std::stod(tempStr)/1000;
             } catch (const std::invalid_argument& e) {
@@ -89,8 +102,12 @@ void GetTemperature::getRpm() {
 
 
     for (size_t j = 0; j < temps.size(); ++j) {
+        if (j >= tempRpmGraph.size()) {
+            std::cerr << "Index " << j << " out of bounds for tempRpmGraph" << std::endl;
+            continue;
+        }
         const int temp = temps[j];
-        const auto& currGraph = tempRpmGraph[j]; // Cache tempRpmGraph[j] as const reference
+        const auto& currGraph = tempRpmGraph[j];
         int& rpm = this->rpms[j];
 
         for (size_t i = 0; i < currGraph.size(); ++i) {
@@ -114,6 +131,10 @@ void GetTemperature::getRpm() {
 }
 
 int GetTemperature::getFanRpm() {
+    if (this->rpms.empty()) {
+        std::cerr << "Error: rpms vector is empty!" << std::endl;
+        return 255;
+    }
     if(this->rpms.size() > 1) { 
 
         if (this->function == "max" && !this->rpms.empty()) {
@@ -379,8 +400,8 @@ void SetFans::setFanSpeedFromDeclaredRpm() {
 
 GetTemperature::~GetTemperature() {
     for (auto &sensor : this->tempSensor) {
-        if(sensor.is_open()) {
-            sensor.close();
+        if(sensor.get().is_open()) {
+            sensor.get().close();
         }
     }
 }
@@ -396,4 +417,56 @@ FanControl::~FanControl() {
     if (this->fanSettingsAutoGenFile.is_open())
         this->fanSettingsAutoGenFile.close();
 
+}
+
+
+TempSensorServer::TempSensorServer(vector<string> tempPaths, vector<string> sensorName) {
+
+    if (tempPaths.size() > 0 && tempPaths.size() == sensorName.size()) {
+        for (int i = 0; i < tempPaths.size(); i++) {
+            this->tempSensorNamePathCoor.push_back(make_pair(sensorName[i], tempPaths[i]));
+        }
+
+        for (int i = 0; i < this->tempSensorNamePathCoor.size(); i++) {
+            const string& path = this->tempSensorNamePathCoor[i].second;
+            bool match = false;
+            if (this->tempSensor.size() == 0) {
+                this->tempSensorStreams.emplace_back(path, ios::in);
+                if (!this->tempSensorStreams.back().is_open()) {
+                    tempSensorStreams.pop_back();
+                    throw std::runtime_error("Failed to open file: " + path);
+                }
+                this->tempSensor.push_back(make_pair(path, ref(tempSensorStreams.back())));
+            } else {
+                for(int j = 0; j < this->tempSensor.size(); j++) {
+                    if(path == tempSensor[j].first) {
+                        match = true;
+                    } 
+                }
+                if (!match) {
+                    this->tempSensorStreams.emplace_back(path, ios::in);
+                    if (!this->tempSensorStreams.back().is_open()) {
+                        tempSensorStreams.pop_back();
+                        throw std::runtime_error("Failed to open file: " + path);
+                    }
+                    this->tempSensor.push_back(make_pair(path, ref(this->tempSensorStreams.back())));
+                }
+            }
+        }
+    } else {
+        throw std::invalid_argument("tempPaths and sensorName must have the same size and should not be empty");
+    }
+
+}
+
+ifstream& TempSensorServer::getTempSenseIfstream(const string &sensorPath) {
+    for (auto& tempSensPair : this->tempSensor) {
+        if (tempSensPair.first == sensorPath) {
+            if (!tempSensPair.second.get().is_open()) {
+                throw std::runtime_error("Sensor stream for path " + sensorPath + " is not open!");
+            }
+            return tempSensPair.second.get();
+        }
+    }
+    throw std::runtime_error("Sensor path not found: " + sensorPath);
 }

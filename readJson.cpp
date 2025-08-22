@@ -20,7 +20,12 @@ void JsonConfigReader::readJsonConfig() {
         }
         jsonConf.close();
     }
-    json conf = json::parse(jsonConfig);
+    json conf;
+    try {
+        conf = json::parse(jsonConfig);
+    } catch (const json::parse_error& e) {
+        throw std::invalid_argument("Config json is invalid: \n" + std::string(e.what()));
+    }
     
     if(conf.contains("settings")) {
         if (conf["settings"].contains("refreshInterval"))
@@ -68,6 +73,22 @@ void JsonConfigReader::readJsonConfig() {
 void JsonConfigReader::returnJsonConfig(FanControlParam* fanControlParam, SoftwareParam* softwareParam) {
     softwareParam->refreshInterval = this->refresh_interval;
 
+    if (this->name.empty()) {
+        throw std::invalid_argument("There are no sensor names set!");
+    }
+    for (const auto& nameOne : this->name) {
+        int same = 0;
+        for(const auto& nameTwo : this->name) {
+            if (nameOne == nameTwo) {
+                ++same;
+            }
+        }
+        if (same > 1) {
+            cerr << "Duplicate " << nameOne << " sensor name found!" << endl;
+            throw std::invalid_argument("Duplicate sensor name found: " + nameOne 
+                + " Names of the sensors should be unique.");
+        }
+    }
     fanControlParam->sensorNames = this->name;
     fanControlParam->tempPaths = this->tempPath;
     fanControlParam->tempRpmGraphs = this->tempRpmGraph;

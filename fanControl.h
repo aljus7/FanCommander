@@ -1,5 +1,6 @@
 #ifndef FANCONTROL_H
 #define FANCONTROL_H
+#include <list>
 #include <string>
 #include <map>
 #include <fstream>
@@ -12,11 +13,22 @@
 
 using namespace std;
 
+    class TempSensorServer {
+        private:
+            list<ifstream> tempSensorStreams;
+            vector<pair<string, reference_wrapper<ifstream>>> tempSensor;
+            vector<pair<string, string>> tempSensorNamePathCoor;
+        protected:
+
+        public:
+            TempSensorServer(vector<string> tempPaths, vector<string> sensorName);
+            ifstream& getTempSenseIfstream(const string &sensorPath);
+    };
 
     class GetTemperature {
         private:
             vector<int> fanRpm;
-            vector<ifstream> tempSensor;
+            vector<reference_wrapper<ifstream>> tempSensor;
             vector<vector<pair<int, int>>> tempRpmGraph;
             string function;
             vector<int> rpms;
@@ -28,7 +40,7 @@ using namespace std;
             void getRpm();
             int getFanRpm();
         public: 
-            GetTemperature(vector<string> tempPath, vector<vector<pair<int, int>>> tempRpmGraph, string function, int maxPwm, int avgTimes); 
+            GetTemperature(vector<string> tempPath, vector<vector<pair<int, int>>> tempRpmGraph, string function, int maxPwm, int avgTimes, TempSensorServer* tmpSrv); 
             ~GetTemperature();
     };
 
@@ -64,8 +76,8 @@ using namespace std;
         protected:
 
         public:
-            SetFans(vector<string> tempPath, vector<vector<pair<int, int>>> tempRpmGraph, string function, string fanPath, string rmpPath, int minPwm, int maxPwm, int startPwm, int avgTimes) : 
-            FanControl(fanPath, rmpPath, minPwm, maxPwm, startPwm), GetTemperature(tempPath, tempRpmGraph, function, maxPwm, avgTimes) {
+            SetFans(vector<string> tempPath, vector<vector<pair<int, int>>> tempRpmGraph, string function, string fanPath, string rmpPath, int minPwm, int maxPwm, int startPwm, int avgTimes, TempSensorServer *tmpSrv) : 
+            FanControl(fanPath, rmpPath, minPwm, maxPwm, startPwm), GetTemperature(tempPath, tempRpmGraph, function, maxPwm, avgTimes, tmpSrv) {
 
             };
             void declareFanRpmFromTempGraph();

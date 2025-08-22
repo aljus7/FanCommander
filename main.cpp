@@ -29,6 +29,8 @@ int main() {
     vector<SetFans*> setFans;
     vector<string> fanModePaths;
 
+    TempSensorServer *senServ = new TempSensorServer(fanControlParam->tempPaths, fanControlParam->sensorNames);
+
     for (int i = 0; i < fanControlParam->fanControlPaths.size(); i++) {
         
         vector<string> buildTempTempPaths;
@@ -56,7 +58,7 @@ int main() {
         }
 
         setFans.push_back(new SetFans(buildTempTempPaths, buildTempTempRpmGraphs, fanControlParam->sensorFunctions[i], fanControlParam->fanControlPaths[i], fanControlParam->fanRpmPaths[i], 
-        fanControlParam->minPwms[i], fanControlParam->maxPwms[i], fanControlParam->startPwms[i], fanControlParam->avgTimes[i]));
+        fanControlParam->minPwms[i], fanControlParam->maxPwms[i], fanControlParam->startPwms[i], fanControlParam->avgTimes[i], senServ));
     }
 
     int refreshTime = softwareParam->refreshInterval;
