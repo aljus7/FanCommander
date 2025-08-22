@@ -71,7 +71,7 @@ int main() {
         this_thread::sleep_for(std::chrono::milliseconds(refreshTime));
     }
 
-    std::cout << "Exiting gracefully...\n";
+    std::cout << "Exiting...\n";
     
     // set fan mode to 2 which means automatic bios control
     for (const auto &fanModePath : fanModePaths) {
