@@ -43,6 +43,11 @@ GetTemperature::GetTemperature(vector<string> tempPath, vector<vector<pair<int, 
         this->maxPwm = 255;
     }
 
+    if (this->tempSensor.size() != this->tempRpmGraph.size()) {
+        cerr << "Size mismatch: tempSensor.size() != tempRpmGraph.size()" << std::endl;
+        throw std::invalid_argument("Size mismatch: tempSensor.size() != tempRpmGraph.size()");
+    }
+
     this->avgTimes = avgTimes;
 
     this->rpms.resize(tempPath.size());
@@ -71,11 +76,6 @@ int GetTemperature::averaging(int pwm) {
 }
 
 void GetTemperature::getRpm() {
-    // Check for size mismatch
-    if (this->tempSensor.size() != this->tempRpmGraph.size()) {
-        std::cerr << "Size mismatch: tempSensor.size() != tempRpmGraph.size()" << std::endl;
-        return;
-    }
     vector<int> temps(this->tempSensor.size());
     string tempStr;
     for(int i = 0; i < this->tempSensor.size(); i++) {
@@ -131,10 +131,7 @@ void GetTemperature::getRpm() {
 }
 
 int GetTemperature::getFanRpm() {
-    if (this->rpms.empty()) {
-        std::cerr << "Error: rpms vector is empty!" << std::endl;
-        return 255;
-    }
+
     if(this->rpms.size() > 1) { 
 
         if (this->function == "max" && !this->rpms.empty()) {
