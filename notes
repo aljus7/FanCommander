@@ -1,5 +1,0 @@
-string line;
-        while (getline (file, line)) {
-            fileText += line;
-        }
-        file.close();
