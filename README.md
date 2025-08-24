@@ -1,3 +1,4 @@
+![Project logo](https://github.com/aljus7/FanCommander/blob/main/logo.png)
 
 # Install:
 ### Dependencies:
