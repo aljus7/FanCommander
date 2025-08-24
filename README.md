@@ -2,7 +2,8 @@
 # Install:
 ### Dependencies:
 lm-sensors
-### run sensors-detect:
+### sensors-detect:
+Run ```sensors-detect``` in terminal.
 This will detect all of the sensors present and they will be used for fancontrol. After that, run the following to check if it detected the sensors correctly:
 
 lm-sensors
