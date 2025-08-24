@@ -40,6 +40,32 @@ In /etc/conf.d/lm_sensors, there are 2 arrays that list all of the modules detec
 
 *** Source: ArchWiki; https://wiki.archlinux.org/title/Fan_speed_control; 25.6.2025 ***
 
+### Install:
+1. Copy fancontrol binary to /usr/local/bin (recommended) or any other location: <br>
+```sudo cp ./fanCommander /usr/local/bin/``` <br>
+2. Make executable: <br>
+```sudo chmod 755 /usr/local/bin/fanCommander``` <br>
+3. Make system.d service to run it at start: <br>
+    - ```sudo touch /etc/systemd/system/fanCommander.service``` <br>
+    - Example systemd service:
+      ``` bash
+      [Unit]
+      Description=Custom Fan Control Daemon, fanCommander
+      After=multi-user.target
+        
+      [Service]
+      ExecStartPre=/bin/sleep 6
+      ExecStart=/usr/local/bin/fanCommander
+      Restart=always
+      User=root
+      Nice=14
+      # hwmon requires root, unless you set udev rules for access
+        
+      [Install]
+      WantedBy=multi-user.target
+      ```
+   - Enable and start that service.
+
 # Configure:
 Config file needs to be located under: "/etc/fanCommander/config.json".
 Example config file:
