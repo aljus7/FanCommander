@@ -33,7 +33,6 @@ If the output does not display an RPM value for the CPU fan, one may need to #In
 *** Source: ArchWiki; https://wiki.archlinux.org/title/Fan_speed_control; 25.6.2025 ***
 
 ### Must do:
-Device paths have changed in /etc/fancontrol
 The enumerated hwmon symlinks located in /sys/class/hwmon/ might vary in order because the kernel modules do not load in a consistent order per boot. Because of this, it may cause fancontrol to not function correctly. The error is "Configuration appears to be outdated, please run pwmconfig again". Upstream bug.
 
 Solution
