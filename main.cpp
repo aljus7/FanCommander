@@ -88,6 +88,16 @@ int main() {
 
     }
 
+    // deleting objects
+    for (auto* fan : setFans) {
+        delete fan;
+    }
+    delete senServ;
+    delete jsonConfigReader;
+    delete fanControlParam;
+    delete softwareParam;
+
+    
     return 0;
 
 }
