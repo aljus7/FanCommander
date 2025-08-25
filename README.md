@@ -59,7 +59,6 @@ In /etc/conf.d/lm_sensors, there are 2 arrays that list all of the modules detec
       Restart=always
       User=root
       Nice=14
-      # hwmon requires root, unless you set udev rules for access
         
       [Install]
       WantedBy=multi-user.target
