@@ -137,6 +137,7 @@ echo "[ OK ] Wrote modules to /etc/modules-load.d/modules.conf"
 # Reload systemd daemon to recognize new units
 sudo systemctl daemon-reload || { echo "[ FAIL ] Failed to reload systemd daemon"; exit 1; }
 echo "[ OK ] Reloaded systemd daemon"
+echo "DONT FORGET TO RESTART COMPUTER"
 
 # Instructions for the user
 echo -e "\nSetup complete! To enable and start the services, run the following commands:"
@@ -147,3 +148,4 @@ echo -e "\nTo start fanCommander now, run:"
 echo "  sudo systemctl start fanCommander.service"
 echo -e "\nFor debugging, run directly in the terminal:"
 echo "  fanCommander"
+echo "DONT FORGET TO RESTART COMPUTER before configuring fanCommander"
