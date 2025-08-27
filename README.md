@@ -41,6 +41,9 @@ In /etc/conf.d/lm_sensors, there are 2 arrays that list all of the modules detec
 *** Source: ArchWiki; https://wiki.archlinux.org/title/Fan_speed_control; 25.6.2025 ***
 
 ### Install:
+You can try to run: https://github.com/aljus7/FanCommander/blob/main/install.sh to go through wizard.<br>
+Dont forget to ```chmod 744 ./install.sh```<br><br>
+If wizard install doesent work for you, you either can fix it or follow instructions:<br>
 1. Copy fancontrol binary to /usr/local/bin (recommended) or any other location: <br>
 ```sudo cp ./fanCommander /usr/local/bin/``` <br>
 2. Make executable: <br>
@@ -64,7 +67,35 @@ In /etc/conf.d/lm_sensors, there are 2 arrays that list all of the modules detec
       WantedBy=multi-user.target
       ```
    - Enable and start that service.
-
+   - If you want for sleep to work you also need:
+     ```
+     [Unit]
+     Description=Stop FanCommander before suspend
+     Before=sleep.target
+        
+     [Service]
+     Type=oneshot
+     ExecStart=/bin/systemctl stop fanCommander.service
+        
+     [Install]
+     WantedBy=sleep.target
+     ```
+     and
+     ```
+     [Unit]
+     Description=Restart FanCommander after resume
+     After=suspend.target
+        
+     [Service]
+     Type=oneshot
+     ExecStart=/bin/systemctl restart fanCommander.service
+        
+     [Install]
+     WantedBy=suspend.target
+     ```
+    - Enable thease two services
+    - all of those services are usually placed in '/etc/systemd/system/'
+    - Good luck.
 # Configure:
 Config file needs to be located under: "/etc/fanCommander/config.json".
 Example config file:
