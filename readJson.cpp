@@ -64,6 +64,8 @@ void JsonConfigReader::readJsonConfig() {
             this->minPwm.push_back(fan["minPwm"].get<int>());
             this->startPwm.push_back(fan["startPwm"].get<int>());
             this->maxPwm.push_back(fan["maxPwm"].get<int>());
+            this->overrideMax.push_back(fan["overrideMax"].get<bool>());
+            this->proportionalFactor.push_back(fan["proportionalFactor"].get<double>());
         }
     } else {
         throw invalid_argument("'fans' array sould exist in config.");
@@ -101,6 +103,8 @@ void JsonConfigReader::returnJsonConfig(FanControlParam* fanControlParam, Softwa
     fanControlParam->minPwms = this->minPwm;
     fanControlParam->startPwms = this->startPwm;
     fanControlParam->maxPwms = this->maxPwm;
+    fanControlParam->overrideMax = this->overrideMax;
+    fanControlParam->proportionalFactor = this->proportionalFactor;
 }
 
 void JsonConfigReader::printParsedJsonInStdout(FanControlParam* fcp, SoftwareParam* sp) {
@@ -133,6 +137,9 @@ void JsonConfigReader::printParsedJsonInStdout(FanControlParam* fcp, SoftwarePar
         cout << "\tMin PWM: " << fcp->minPwms[i] << endl;
         cout << "\tStart PWM: " << fcp->startPwms[i] << endl;
         cout << "\tMax PWM: " << fcp->maxPwms[i] << endl;
+        cout << "\tOverride max value: " << ((fcp->overrideMax[i] == true) ? "ON" : "OFF") << endl;
+        cout << "\tProportional fan control state (proportionalFactor>0 - ON; proportionalFactor<0 - OFF): " << ((fcp->proportionalFactor[i] > 0) ? "ON" : "OFF") << endl;
+        cout << "\tProportional factor value: " << ((fcp->proportionalFactor[i] == 0) ? "OFF" :  to_string(fcp->proportionalFactor[i])) << endl;
     }
     cout << endl << endl;
 

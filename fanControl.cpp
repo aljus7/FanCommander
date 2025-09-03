@@ -1,5 +1,6 @@
 #include"fanControl.h"
 #include <functional>
+#include <ostream>
 #include <regex>
 #include <string>
 #include <thread>
@@ -170,7 +171,7 @@ int GetTemperature::getFanRpm() {
     }
 }
 
-FanControl::FanControl(string fanPath, string rpmPath, int minPwm, int maxPwm, int startPwm) {
+FanControl::FanControl(string fanPath, string rpmPath, int minPwm, int maxPwm, int startPwm, bool overrideMax, double propFactor) {
 
     if (!fanPath.empty() && !rpmPath.empty()) {
         this->fanNamePath = fanPath;
@@ -198,6 +199,14 @@ FanControl::FanControl(string fanPath, string rpmPath, int minPwm, int maxPwm, i
         this->startPwm = 0;
         this->maxPwmGood = 255;
     }
+
+    if (overrideMax) {
+        this->overrideMax = true;
+    } else {
+        this->overrideMax = false;
+    }
+
+    this->propFactor = propFactor;
 
     regex nonDigit("[^0-9]+");
     string autoGenFileName = this->stateFilesPath + regex_replace(this->fanNamePath, nonDigit, "") + this->autoGenFileAppend;
@@ -237,9 +246,21 @@ void FanControl::getMinStartPwm(fstream &file) {
             savedSettingsJson += line;
         }
         json savedVal = json::parse(savedSettingsJson);
+        if (savedVal["overrideMax"] != this->overrideMax || this->propFactor > 0 && savedVal["proportionalFactor"] == 0) {
+            writeMinStartPwm(file);
+            return;
+        }
         this->minPwmGood = savedVal["minPwm"].get<int>();
         this->startPwmGood = savedVal["startPwm"].get<int>();
         this->maxPwmGood = savedVal["maxPwm"].get<int>();
+
+        if (this->propFactor > 0) {
+            if (savedVal["pwmRpmData"].is_array()) {
+                for (const auto &data : savedVal["pwmRpmData"]) {
+                    this->rpmPwmCoorelation[data["pwm"].get<int>()] = data["rpm"].get<int>();
+                }
+            }
+        }
     } else {
         std::cerr << "File is not open!" << std::endl;
         throw std::runtime_error("Failed to open saved values file.");
@@ -269,17 +290,79 @@ void FanControl::writeMinStartPwm(fstream &file) {
         }
     }
 
-    // calculationg start pwm
-    for (int i = 0; i < 255; i++) {
+    // calculationg start pwm and make rpm / pwm coorelation graph
+    bool startFound = false;
+    for (int i = 0; i <= 255; i++) {
         this->fanControl.seekp(0);
         this->fanControl << i << endl;
         waitForFanRpmToStabilize();
         string rpm;
         this->rpmSensor.seekg(0);
         if (getline(this->rpmSensor, rpm)) {
-            if (stod(rpm) > 0) {
+            if (stod(rpm) > 0 && !startFound) {
                 this->startPwmGood = i;
-                break;
+                startFound = true;
+            }
+            if (startFound && stod(rpm) == 0) {
+                startFound = false;
+            }
+            if (this->propFactor > 0)
+                this->rpmPwmCoorelation[i] = stod(rpm);
+        }
+    }
+
+    // calculating max pwm, if not oveririden
+    if (!overrideMax || this->propFactor > 0) {
+        int prevRpm = 0;
+        bool quitOuter = false;
+        int lastInc = 0;
+        for (int i = this->startPwmGood; i<=255; i++) {
+            if (i >= lastInc) {
+                this->fanControl.seekp(0);
+                this->fanControl << i << endl;
+                if (i == this->startPwmGood) {
+                    this_thread::sleep_for(std::chrono::milliseconds(5000));
+                }
+                waitForFanRpmToStabilize();
+                string rpm;
+                this->rpmSensor.seekg(0);
+                if (getline(this->rpmSensor, rpm)) {
+                    if (i == this->startPwmGood)
+                        prevRpm = stod(rpm);
+                    else {
+                        if (!(prevRpm < stod(rpm))) {
+                            for(int j = i+1; j <= 255; j++) {
+                                this->fanControl.seekp(0);
+                                this->fanControl << j << endl;
+                                waitForFanRpmToStabilize();
+                                string rpmSan;
+                                this->rpmSensor.seekg(0);
+                                if (getline(this->rpmSensor, rpmSan)) {
+                                    if(prevRpm < stod(rpmSan)) {
+                                        //if (j > 0)
+                                        if (i < j)    
+                                            lastInc = j;
+                                        prevRpm = stod(rpmSan);
+                                        break;
+                                    } else if (j == 255) {
+                                        this->maxRpm = stod(rpmSan);
+                                        this->maxPwmGood = i;
+                                        quitOuter = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (quitOuter) {
+                            break;
+                        } else if (i==255) {
+                            this->maxPwmGood = 255;
+                            this->maxRpm = stod(rpm);
+                        }
+                        prevRpm = stod(rpm);
+                    }
+
+                }
             }
         }
     }
@@ -299,7 +382,17 @@ void FanControl::writeMinStartPwm(fstream &file) {
         jObject["minPwm"] = this->minPwmGood;
         jObject["startPwm"] = this->startPwmGood;
         jObject["maxPwm"] = this->maxPwmGood;
-
+        jObject["overrideMax"] = this->overrideMax;
+        jObject["proportionalFactor"] = this->propFactor;
+        if (this->propFactor > 0) {  
+            jObject["pwmRpmData"] = json::array();
+            for (int i = 0; i <= 255; i++) {
+                nlohmann::json entry;
+                entry["pwm"] = i;
+                entry["rpm"] = this->rpmPwmCoorelation[i];
+                jObject["pwmRpmData"].push_back(entry);
+            }
+        }
         file << jObject.dump(4);
     } else {
         std::cerr << "File is not open!" << std::endl;
@@ -362,7 +455,22 @@ void FanControl::setFanSpeed(int pwm) {
                 } else {
                     fanControl.seekp(0);
                     fanControl << this->startPwmGood << endl;
+                    cout << "ATENTION: Critical system failure, fan is likely dead!" << endl;
                 }
+            }
+
+            if (this->propFactor > 0 && pwm > this->minPwmGood) {
+                
+                if (pwm > maxPwmGood) {
+                    pwm = maxPwmGood;
+                }
+
+                pwm = this->propFactor * (this->rpmPwmCoorelation[pwm] - this->feedBackRpm) + pwm;
+
+            }
+
+            if (pwm > this->maxPwmGood) {
+                pwm = maxPwmGood;
             }
 
             if (pwm >= this->minPwmGood) {    
@@ -372,6 +480,7 @@ void FanControl::setFanSpeed(int pwm) {
                 fanControl.seekp(0);
                 fanControl << this->minPwmGood << endl;
             }
+
         } else {
             cerr << "PWM value must be between 0 and 255." << endl;
             throw std::out_of_range("PWM value must be between 0 and 255.");

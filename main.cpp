@@ -5,7 +5,8 @@
 #include <atomic>
 #include <csignal>
 using namespace std;
-const string jsonConfigLocation = "/etc/fanCommander/config.json";
+const string jsonConfigLocation = "config.json";
+//const string jsonConfigLocation = "/etc/fanCommander/config.json";
 
 atomic<bool> keepRunning(true);
 
@@ -58,7 +59,7 @@ int main() {
         }
 
         setFans.push_back(new SetFans(buildTempTempPaths, buildTempTempRpmGraphs, fanControlParam->sensorFunctions[i], fanControlParam->fanControlPaths[i], fanControlParam->fanRpmPaths[i], 
-        fanControlParam->minPwms[i], fanControlParam->maxPwms[i], fanControlParam->startPwms[i], fanControlParam->avgTimes[i], senServ));
+        fanControlParam->minPwms[i], fanControlParam->maxPwms[i], fanControlParam->startPwms[i], fanControlParam->avgTimes[i], senServ, fanControlParam->overrideMax[i], fanControlParam->proportionalFactor[i]));
     }
 
     int refreshTime = softwareParam->refreshInterval;

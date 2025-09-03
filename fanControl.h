@@ -61,10 +61,14 @@ using namespace std;
             void writeMinStartPwm(fstream &file);
             void getMinStartPwm(fstream &file);
             void waitForFanRpmToStabilize();
+            bool overrideMax;
+            double propFactor;
+            int maxRpm;
+            int rpmPwmCoorelation[256];
 
             int feedBackRpm;
         public: 
-            FanControl(string fanPath, string rpmPath, int minPwm, int maxPwm, int startPwm);
+            FanControl(string fanPath, string rpmPath, int minPwm, int maxPwm, int startPwm, bool overrideMax, double propFactor);
             void setFanSpeed(int pwm);
             void getFeedbackRpm();
             ~FanControl();
@@ -76,8 +80,8 @@ using namespace std;
         protected:
 
         public:
-            SetFans(vector<string> tempPath, vector<vector<pair<int, int>>> tempRpmGraph, string function, string fanPath, string rmpPath, int minPwm, int maxPwm, int startPwm, int avgTimes, TempSensorServer *tmpSrv) : 
-            FanControl(fanPath, rmpPath, minPwm, maxPwm, startPwm), GetTemperature(tempPath, tempRpmGraph, function, maxPwm, avgTimes, tmpSrv) {
+            SetFans(vector<string> tempPath, vector<vector<pair<int, int>>> tempRpmGraph, string function, string fanPath, string rmpPath, int minPwm, int maxPwm, int startPwm, int avgTimes, TempSensorServer *tmpSrv, bool overrideMax, double propFactor) : 
+            FanControl(fanPath, rmpPath, minPwm, maxPwm, startPwm, overrideMax, propFactor), GetTemperature(tempPath, tempRpmGraph, function, maxPwm, avgTimes, tmpSrv) {
 
             };
             void declareFanRpmFromTempGraph();
