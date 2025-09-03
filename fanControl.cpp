@@ -246,7 +246,7 @@ void FanControl::getMinStartPwm(fstream &file) {
             savedSettingsJson += line;
         }
         json savedVal = json::parse(savedSettingsJson);
-        if (savedVal["overrideMax"] != this->overrideMax || this->propFactor > 0 && savedVal["proportionalFactor"] == 0) {
+        if (savedVal["overrideMax"] != this->overrideMax || this->propFactor == 0 && savedVal["proportionalFactor"] > 0) {
             writeMinStartPwm(file);
             return;
         }
