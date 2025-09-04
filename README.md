@@ -97,12 +97,14 @@ If wizard install doesent work for you, you either can fix it or follow instruct
     - all of those services are usually placed in '/etc/systemd/system/'
     - Good luck.
 # Configure:
-Config file needs to be located under: "/etc/fanCommander/config.json".
+Config file needs to be located under: "/etc/fanCommander/config.json".<br>
+overrideMax - overrides user set maxPwm value with internally calculated one. That feature is set to false if proportionalFactor is more than 0.<br>
+proportionalFactor - 0 is OFF, > 0 is ON. Set proportioanl value for proportional fan error adjustment.<br>
 Example config file:
 ``` json
 {
     "settings": {
-        "refreshInterval": 1000
+        "refreshInterval": 500
     },
     
     "tempSensors": [
@@ -120,7 +122,7 @@ Example config file:
             "sensor": "GPU",
             "path": "/sys/class/hwmon/hwmon6/temp1_input",
             "graph": [
-                {"temp": 48, "pwm": 85},
+                {"temp": 48, "pwm": 90},
                 {"temp": 50, "pwm": 100},
                 {"temp": 60, "pwm": 180},
                 {"temp": 70, "pwm": 255}
@@ -137,7 +139,9 @@ Example config file:
             "averageSampleSize" : 10,
             "minPwm": 60,
             "startPwm": 70,
-            "maxPwm": 255
+            "maxPwm": 255,
+            "overrideMax": false,
+            "proportionalFactor" : 0.05
         },
         {
             "fanControlPath": "/sys/class/hwmon/hwmon4/pwm1",
@@ -147,7 +151,9 @@ Example config file:
             "averageSampleSize" : 10,
             "minPwm": 60,
             "startPwm": 70,
-            "maxPwm": 255
+            "maxPwm": 255,
+            "overrideMax": false,
+            "proportionalFactor" : 0.05
         }
     ]
 
