@@ -8,8 +8,9 @@ echo "[ OK ] Systemd is present."
 # JSON configuration
 configExample='{
     "settings": {
-        "refreshInterval": 1000
+        "refreshInterval": 500
     },
+    
     "tempSensors": [
         {
             "sensor": "CPU",
@@ -25,35 +26,41 @@ configExample='{
             "sensor": "GPU",
             "path": "/sys/class/hwmon/hwmon6/temp1_input",
             "graph": [
-                {"temp": 48, "pwm": 85},
+                {"temp": 48, "pwm": 90},
                 {"temp": 50, "pwm": 100},
                 {"temp": 60, "pwm": 180},
                 {"temp": 70, "pwm": 255}
             ]
         }
     ],
+
     "fans": [
         {
             "fanControlPath": "/sys/class/hwmon/hwmon4/pwm4",
             "fanRpmPath": "/sys/class/hwmon/hwmon4/fan4_input",
             "sensors": ["GPU", "CPU"],
             "sensorFunction": "max",
-            "averageSampleSize": 10,
+            "averageSampleSize" : 10,
             "minPwm": 60,
             "startPwm": 70,
-            "maxPwm": 255
+            "maxPwm": 255,
+            "overrideMax": false,
+            "proportionalFactor" : 0.05
         },
         {
             "fanControlPath": "/sys/class/hwmon/hwmon4/pwm1",
             "fanRpmPath": "/sys/class/hwmon/hwmon4/fan1_input",
             "sensors": ["GPU", "CPU"],
             "sensorFunction": "max",
-            "averageSampleSize": 10,
+            "averageSampleSize" : 10,
             "minPwm": 60,
             "startPwm": 70,
-            "maxPwm": 255
+            "maxPwm": 255,
+            "overrideMax": false,
+            "proportionalFactor" : 0.05
         }
     ]
+
 }'
 
 # systemd service units

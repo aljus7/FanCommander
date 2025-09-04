@@ -36,8 +36,8 @@
             "minPwm": 60,
             "startPwm": 70,
             "maxPwm": 255,
-            "overrideMax": true,
-            "proportionalFactor" : 0
+            "overrideMax": false,
+            "proportionalFactor" : 0.05
         },
         {
             "fanControlPath": "/sys/class/hwmon/hwmon4/pwm1",
@@ -48,8 +48,8 @@
             "minPwm": 60,
             "startPwm": 70,
             "maxPwm": 255,
-            "overrideMax": true,
-            "proportionalFactor" : 0
+            "overrideMax": false,
+            "proportionalFactor" : 0.05
         }
     ]
 

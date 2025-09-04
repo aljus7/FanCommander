@@ -306,8 +306,7 @@ void FanControl::writeMinStartPwm(fstream &file) {
             if (startFound && stod(rpm) == 0) {
                 startFound = false;
             }
-            if (this->propFactor > 0)
-                this->rpmPwmCoorelation[i] = stod(rpm);
+            this->rpmPwmCoorelation[i] = stod(rpm);
         }
     }
 
@@ -384,14 +383,12 @@ void FanControl::writeMinStartPwm(fstream &file) {
         jObject["maxPwm"] = this->maxPwmGood;
         jObject["overrideMax"] = this->overrideMax;
         jObject["proportionalFactor"] = this->propFactor;
-        if (this->propFactor > 0) {  
-            jObject["pwmRpmData"] = json::array();
-            for (int i = 0; i <= 255; i++) {
-                nlohmann::json entry;
-                entry["pwm"] = i;
-                entry["rpm"] = this->rpmPwmCoorelation[i];
-                jObject["pwmRpmData"].push_back(entry);
-            }
+        jObject["pwmRpmData"] = json::array();
+        for (int i = 0; i <= 255; i++) {
+            nlohmann::json entry;
+            entry["pwm"] = i;
+            entry["rpm"] = this->rpmPwmCoorelation[i];
+            jObject["pwmRpmData"].push_back(entry);
         }
         file << jObject.dump(4);
     } else {

@@ -5,8 +5,8 @@
 #include <atomic>
 #include <csignal>
 using namespace std;
-const string jsonConfigLocation = "config.json";
-//const string jsonConfigLocation = "/etc/fanCommander/config.json";
+//const string jsonConfigLocation = "config.json";
+const string jsonConfigLocation = "/etc/fanCommander/config.json";
 
 atomic<bool> keepRunning(true);
 
