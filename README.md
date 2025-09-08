@@ -1,4 +1,4 @@
-![Project logo](https://github.com/aljus7/FanCommander/blob/main/logo.png)
+![Project logo](https://github.com/aljus7/FanCommander/blob/main/Logo/logo.png)
 # Install:
 ### Dependencies:
 lm-sensors
