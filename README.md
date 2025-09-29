@@ -141,7 +141,8 @@ Config file needs to be located under: "/etc/fanCommander/config.json".<br>
             "startPwm": 70,
             "maxPwm": 255,
             "overrideMax": false,
-            "proportionalFactor" : 0.05
+            "proportionalFactor" : 0.05,
+            "hysteresis": 0.08
         },
         {
             "fanControlPath": "/sys/class/hwmon/hwmon4/pwm1",
@@ -153,7 +154,8 @@ Config file needs to be located under: "/etc/fanCommander/config.json".<br>
             "startPwm": 70,
             "maxPwm": 255,
             "overrideMax": false,
-            "proportionalFactor" : 0.05
+            "proportionalFactor" : 0.05,
+            "hysteresis": 0.08
         }
     ]
 
