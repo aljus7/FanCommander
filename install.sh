@@ -45,7 +45,8 @@ configExample='{
             "startPwm": 70,
             "maxPwm": 255,
             "overrideMax": false,
-            "proportionalFactor" : 0.05
+            "proportionalFactor" : 0.05,
+            "hysteresis": 0.08
         },
         {
             "fanControlPath": "/sys/class/hwmon/hwmon4/pwm1",
@@ -57,7 +58,8 @@ configExample='{
             "startPwm": 70,
             "maxPwm": 255,
             "overrideMax": false,
-            "proportionalFactor" : 0.05
+            "proportionalFactor" : 0.05,
+            "hysteresis": 0.08
         }
     ]
 
