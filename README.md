@@ -1,4 +1,4 @@
-![Project logo](https://github.com/aljus7/FanCommander/blob/main/logo.png)
+![Project logo](https://github.com/aljus7/FanCommander/blob/main/Logo/logo.png)
 # Install:
 ### Dependencies:
 lm-sensors
@@ -36,7 +36,7 @@ If the output does not display an RPM value for the CPU fan, one may need to #In
 The enumerated hwmon symlinks located in /sys/class/hwmon/ might vary in order because the kernel modules do not load in a consistent order per boot. Because of this, it may cause FanCommander to not function correctly.
 
 Solution
-In /etc/conf.d/lm_sensors, there are 2 arrays that list all of the modules detected when you execute sensors-detect. These get loaded in by fancontrol. If the file does not exist, run sensors-detect as root, accepting the defaults. Open (or create) /etc/modules-load.d/modules.conf. Get all of the modules listed from the 2 variables in /etc/conf.d/lm_sensors and place them into the /etc/modules-load.d/modules.conf file, one module per line. Specifying them like this should make a defined order for the modules to load in, which should make the hwmon paths stay where they are and not change orders for every boot. If this does not work, I highly recommend finding another program to control your fans. If you cannot find any, then you could try using the alternative solution below.
+In /etc/conf.d/lm_sensors, there are 2 arrays that list all of the modules detected when you execute sensors-detect. These get loaded in by fancontrol. If the file does not exist, run sensors-detect as root, accepting the defaults. Open (or create) /etc/modules-load.d/modules.conf. Get all of the modules listed from the 2 variables in /etc/conf.d/lm_sensors and place them into the /etc/modules-load.d/modules.conf file, one module per line. Specifying them like this should make a defined order for the modules to load in, which should make the hwmon paths stay where they are and not change orders for every boot. If this does not work, I highly recommend finding another program to control your fans.
 
 *** Source: ArchWiki; https://wiki.archlinux.org/title/Fan_speed_control; 25.6.2025 ***
 
@@ -98,9 +98,9 @@ If wizard install doesent work for you, you either can fix it or follow instruct
     - Good luck.
 # Configure:
 Config file needs to be located under: "/etc/fanCommander/config.json".<br>
-overrideMax - overrides user set maxPwm value with internally calculated one. That feature is set to false if proportionalFactor is more than 0.<br>
-proportionalFactor - 0 is OFF, > 0 is ON. Set proportioanl value for proportional fan error adjustment.<br>
-Example config file:
+<br>overrideMax - overrides user set maxPwm value with internally calculated one. That feature is set to false if proportionalFactor is more than 0.<br>
+<br>proportionalFactor - 0 is OFF, > 0 is ON. Set proportioanl value for proportional fan error adjustment.<br>
+<br>Example config file:
 ``` json
 {
     "settings": {
