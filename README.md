@@ -98,7 +98,7 @@ If wizard install doesent work for you, you either can fix it or follow instruct
     - Good luck.
 # Configure:
 Config file needs to be located under: "/etc/fanCommander/config.json".<br>
-<br>overrideMax - overrides user set maxPwm value with internally calculated one. That feature is set to false if proportionalFactor is more than 0.<br>
+<br>overrideMax - overrides internaly calculated maxPwm value with user set one. That feature is set to false if proportionalFactor is more than 0.<br>
 <br>proportionalFactor - 0 is OFF, > 0 is ON. Set proportioanl value for proportional fan error adjustment.<br>
 <br>Example config file:
 ``` json
