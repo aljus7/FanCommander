@@ -65,10 +65,14 @@ using namespace std;
             double propFactor;
             int maxRpm;
             int rpmPwmCoorelation[256];
+            int hysteresisGood;
+
+            int prevSetPwm = 0;
+            bool needsChange = true;
 
             int feedBackRpm;
         public: 
-            FanControl(string fanPath, string rpmPath, int minPwm, int maxPwm, int startPwm, bool overrideMax, double propFactor);
+            FanControl(string fanPath, string rpmPath, int minPwm, int maxPwm, int startPwm, bool overrideMax, double propFactor, double hysteresis);
             void setFanSpeed(int pwm);
             void getFeedbackRpm();
             ~FanControl();
@@ -80,8 +84,8 @@ using namespace std;
         protected:
 
         public:
-            SetFans(vector<string> tempPath, vector<vector<pair<int, int>>> tempRpmGraph, string function, string fanPath, string rmpPath, int minPwm, int maxPwm, int startPwm, int avgTimes, TempSensorServer *tmpSrv, bool overrideMax, double propFactor) : 
-            FanControl(fanPath, rmpPath, minPwm, maxPwm, startPwm, overrideMax, propFactor), GetTemperature(tempPath, tempRpmGraph, function, maxPwm, avgTimes, tmpSrv) {
+            SetFans(vector<string> tempPath, vector<vector<pair<int, int>>> tempRpmGraph, string function, string fanPath, string rmpPath, int minPwm, int maxPwm, int startPwm, int avgTimes, TempSensorServer *tmpSrv, bool overrideMax, double propFactor, double hysteresis) : 
+            FanControl(fanPath, rmpPath, minPwm, maxPwm, startPwm, overrideMax, propFactor, hysteresis), GetTemperature(tempPath, tempRpmGraph, function, maxPwm, avgTimes, tmpSrv) {
 
             };
             void declareFanRpmFromTempGraph();

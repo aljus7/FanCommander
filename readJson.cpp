@@ -2,6 +2,7 @@
 #include <iostream>
 #include <nlohmann/json.hpp>
 #include <fstream>
+#include <stdexcept>
 #include <utility>
 using namespace std;
 using json = nlohmann::json;
@@ -66,6 +67,7 @@ void JsonConfigReader::readJsonConfig() {
             this->maxPwm.push_back(fan["maxPwm"].get<int>());
             this->overrideMax.push_back(fan["overrideMax"].get<bool>());
             this->proportionalFactor.push_back(fan["proportionalFactor"].get<double>());
+            this->hysteresis.push_back(fan["hysteresis"].get<double>());
         }
     } else {
         throw invalid_argument("'fans' array sould exist in config.");
@@ -105,6 +107,12 @@ void JsonConfigReader::returnJsonConfig(FanControlParam* fanControlParam, Softwa
     fanControlParam->maxPwms = this->maxPwm;
     fanControlParam->overrideMax = this->overrideMax;
     fanControlParam->proportionalFactor = this->proportionalFactor;
+    for (const auto& hyst : this->hysteresis) {
+        if (hyst < 0 && hyst > 0.3) {
+            throw std::invalid_argument("Hysteresis can be set between value 0 - 0.3");
+        }
+    }
+    fanControlParam->hysteresis = this->hysteresis;
 }
 
 void JsonConfigReader::printParsedJsonInStdout(FanControlParam* fcp, SoftwareParam* sp) {
@@ -140,6 +148,7 @@ void JsonConfigReader::printParsedJsonInStdout(FanControlParam* fcp, SoftwarePar
         cout << "\tOverride max value: " << ((fcp->overrideMax[i] == true) ? "ON" : "OFF") << endl;
         cout << "\tProportional fan control state (proportionalFactor>0 - ON; proportionalFactor<0 - OFF): " << ((fcp->proportionalFactor[i] > 0) ? "ON" : "OFF") << endl;
         cout << "\tProportional factor value: " << ((fcp->proportionalFactor[i] == 0) ? "OFF" :  to_string(fcp->proportionalFactor[i])) << endl;
+        cout << "\tHysteresis percentage: " << fcp->hysteresis[i]*100 << "%" << endl;
     }
     cout << endl << endl;
 

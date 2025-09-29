@@ -171,7 +171,7 @@ int GetTemperature::getFanRpm() {
     }
 }
 
-FanControl::FanControl(string fanPath, string rpmPath, int minPwm, int maxPwm, int startPwm, bool overrideMax, double propFactor) {
+FanControl::FanControl(string fanPath, string rpmPath, int minPwm, int maxPwm, int startPwm, bool overrideMax, double propFactor, double hysteresis) {
 
     if (!fanPath.empty() && !rpmPath.empty()) {
         this->fanNamePath = fanPath;
@@ -187,6 +187,13 @@ FanControl::FanControl(string fanPath, string rpmPath, int minPwm, int maxPwm, i
         } else {
             throw std::runtime_error("Failed to open rpm sensor file.");
         }
+    }
+
+    if (hysteresis < 1 && hysteresis >= 0) {
+        this->hysteresisGood = hysteresis*255;
+    } else {
+        cerr << "Hysteresis is invalid, defaulting to 0" << endl;
+        this->hysteresisGood = 0;
     }
 
     if (minPwm >= 0 && minPwm <= 255 && startPwm >= 0 && startPwm <= 255 && maxPwm <= 255 && maxPwm >= 0 && maxPwm != minPwm && startPwm != maxPwm) {
@@ -287,6 +294,8 @@ void FanControl::writeMinStartPwm(fstream &file) {
                 this->minPwmGood = i;
                 break;
             }
+        } else {
+            cerr << "Failed to read RPM sensor, when probing Min PWM." << endl;
         }
     }
 
@@ -307,6 +316,8 @@ void FanControl::writeMinStartPwm(fstream &file) {
                 startFound = false;
             }
             this->rpmPwmCoorelation[i] = stod(rpm);
+        } else {
+            cerr << "Failed to read RPM sensor, when probing Start PWM and making rpm - pwm coorelationgraph." << endl;
         }
     }
 
@@ -349,6 +360,8 @@ void FanControl::writeMinStartPwm(fstream &file) {
                                         quitOuter = true;
                                         break;
                                     }
+                                } else {
+                                    cerr << "Failed to read RPM sensor, when probing Max PWM value." << endl;
                                 }
                             }
                         }
@@ -361,6 +374,8 @@ void FanControl::writeMinStartPwm(fstream &file) {
                         prevRpm = stod(rpm);
                     }
 
+                } else {
+                    cerr << "Failed to read RPM sensor, when probing Max PWM value." << endl;
                 }
             }
         }
@@ -442,6 +457,8 @@ void FanControl::getFeedbackRpm() {
 
 void FanControl::setFanSpeed(int pwm) {
     getFeedbackRpm();
+    int &prevPwm = this->prevSetPwm;
+    bool &needChange = this->needsChange;
 
     if (fanControl.is_open()) {
         if (pwm <= 255 && pwm >= 0) {
@@ -456,6 +473,18 @@ void FanControl::setFanSpeed(int pwm) {
                 }
             }
 
+            if (this->hysteresisGood > 0) {
+                if (abs(prevPwm-pwm) < this->hysteresisGood) {
+                    pwm = prevPwm;
+                    if (this->propFactor == 0) {
+                        needChange = false;
+                    } 
+                } else {
+                    needChange = true;
+                }
+                prevPwm = pwm;
+            }
+
             if (this->propFactor > 0 && pwm > this->minPwmGood) {
                 
                 if (pwm > maxPwmGood) {
@@ -466,16 +495,20 @@ void FanControl::setFanSpeed(int pwm) {
 
             }
 
-            if (pwm > this->maxPwmGood) {
-                pwm = maxPwmGood;
-            }
+            if (needChange) {
 
-            if (pwm >= this->minPwmGood) {    
-                fanControl.seekp(0);
-                fanControl << pwm << endl;
-            } else {
-                fanControl.seekp(0);
-                fanControl << this->minPwmGood << endl;
+                if (pwm > this->maxPwmGood) {
+                    pwm = maxPwmGood;
+                }
+
+                if (pwm >= this->minPwmGood) {    
+                    fanControl.seekp(0);
+                    fanControl << pwm << endl;
+                } else {
+                    fanControl.seekp(0);
+                    fanControl << this->minPwmGood << endl;
+                }
+                
             }
 
         } else {

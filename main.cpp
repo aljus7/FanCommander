@@ -59,7 +59,7 @@ int main() {
         }
 
         setFans.push_back(new SetFans(buildTempTempPaths, buildTempTempRpmGraphs, fanControlParam->sensorFunctions[i], fanControlParam->fanControlPaths[i], fanControlParam->fanRpmPaths[i], 
-        fanControlParam->minPwms[i], fanControlParam->maxPwms[i], fanControlParam->startPwms[i], fanControlParam->avgTimes[i], senServ, fanControlParam->overrideMax[i], fanControlParam->proportionalFactor[i]));
+        fanControlParam->minPwms[i], fanControlParam->maxPwms[i], fanControlParam->startPwms[i], fanControlParam->avgTimes[i], senServ, fanControlParam->overrideMax[i], fanControlParam->proportionalFactor[i], fanControlParam->hysteresis[i]));
     }
 
     int refreshTime = softwareParam->refreshInterval;

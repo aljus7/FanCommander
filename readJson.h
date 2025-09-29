@@ -26,6 +26,7 @@ struct FanControlParam {
     vector<int> maxPwms;
     vector<bool> overrideMax;
     vector<double> proportionalFactor;
+    vector<double> hysteresis;
 };
 
 class JsonConfigReader {
@@ -48,6 +49,7 @@ class JsonConfigReader {
         vector<int> maxPwm;
         vector<bool> overrideMax;
         vector<double> proportionalFactor;
+        vector<double> hysteresis;
     public:
         JsonConfigReader(string configPath);
         void readJsonConfig();
