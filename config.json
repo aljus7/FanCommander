@@ -1,6 +1,7 @@
 {
     "settings": {
-        "refreshInterval": 500
+        "refreshInterval": 500,
+        "oneSensorReadPerCycle": true
     },
     
     "tempSensors": [

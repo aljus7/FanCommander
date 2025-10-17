@@ -31,6 +31,7 @@ int main() {
     vector<string> fanModePaths;
 
     TempSensorServer *senServ = new TempSensorServer(fanControlParam->tempPaths, fanControlParam->sensorNames);
+    OneSenseReadPerCycle *oneRead = new OneSenseReadPerCycle();
 
     for (int i = 0; i < fanControlParam->fanControlPaths.size(); i++) {
         
@@ -59,7 +60,7 @@ int main() {
         }
 
         setFans.push_back(new SetFans(buildTempTempPaths, buildTempTempRpmGraphs, fanControlParam->sensorFunctions[i], fanControlParam->fanControlPaths[i], fanControlParam->fanRpmPaths[i], 
-        fanControlParam->minPwms[i], fanControlParam->maxPwms[i], fanControlParam->startPwms[i], fanControlParam->avgTimes[i], senServ, fanControlParam->overrideMax[i], fanControlParam->proportionalFactor[i], fanControlParam->hysteresis[i]));
+        fanControlParam->minPwms[i], fanControlParam->maxPwms[i], fanControlParam->startPwms[i], fanControlParam->avgTimes[i], senServ, fanControlParam->overrideMax[i], fanControlParam->proportionalFactor[i], fanControlParam->hysteresis[i], oneRead, softwareParam->oneSenseReadPc));
     }
 
     int balancedRefreshTime = 0;
@@ -74,6 +75,9 @@ int main() {
             fan->declareFanRpmFromTempGraph();
             fan->setFanSpeedFromDeclaredRpm();
             this_thread::sleep_for(std::chrono::milliseconds(balancedRefreshTime));
+        }
+        if (softwareParam->oneSenseReadPc) {
+            oneRead->resetAllSavedValues();
         }
     }
 

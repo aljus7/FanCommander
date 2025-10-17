@@ -13,6 +13,17 @@
 
 using namespace std;
 
+    class OneSenseReadPerCycle {
+        private:
+            vector<pair<string, int>> savedValues;
+            int nextReturnValue;
+        public:
+            bool isValueSet(string& senseName);
+            int& getSetValue();
+            void setValue(string& senseName, int val);
+            void resetAllSavedValues();
+    };
+
     class TempSensorServer {
         private:
             list<ifstream> tempSensorStreams;
@@ -23,12 +34,14 @@ using namespace std;
         public:
             TempSensorServer(vector<string> tempPaths, vector<string> sensorName);
             ifstream& getTempSenseIfstream(const string &sensorPath);
+            string getTempSenseName(const string &sensorPath);
     };
 
     class GetTemperature {
         private:
             vector<int> fanRpm;
             vector<reference_wrapper<ifstream>> tempSensor;
+            vector<string> tempSensorNames;
             vector<vector<pair<int, int>>> tempRpmGraph;
             string function;
             vector<int> rpms;
@@ -36,11 +49,13 @@ using namespace std;
             int avgTimes;
             deque<int> lastPwmValues;
             int averaging(int pwm);
+            OneSenseReadPerCycle* osrpc;
+            bool osrpcState;
         protected:
             void getRpm();
             int getFanRpm();
         public: 
-            GetTemperature(vector<string> tempPath, vector<vector<pair<int, int>>> tempRpmGraph, string function, int maxPwm, int avgTimes, TempSensorServer* tmpSrv); 
+            GetTemperature(vector<string> tempPath, vector<vector<pair<int, int>>> tempRpmGraph, string function, int maxPwm, int avgTimes, TempSensorServer* tmpSrv, OneSenseReadPerCycle* oneSensePc, bool osrpcState); 
             ~GetTemperature();
     };
 
@@ -84,8 +99,8 @@ using namespace std;
         protected:
 
         public:
-            SetFans(vector<string> tempPath, vector<vector<pair<int, int>>> tempRpmGraph, string function, string fanPath, string rmpPath, int minPwm, int maxPwm, int startPwm, int avgTimes, TempSensorServer *tmpSrv, bool overrideMax, double propFactor, double hysteresis) : 
-            FanControl(fanPath, rmpPath, minPwm, maxPwm, startPwm, overrideMax, propFactor, hysteresis), GetTemperature(tempPath, tempRpmGraph, function, maxPwm, avgTimes, tmpSrv) {
+            SetFans(vector<string> tempPath, vector<vector<pair<int, int>>> tempRpmGraph, string function, string fanPath, string rmpPath, int minPwm, int maxPwm, int startPwm, int avgTimes, TempSensorServer *tmpSrv, bool overrideMax, double propFactor, double hysteresis, OneSenseReadPerCycle* osrpc, bool osrpcState) : 
+            FanControl(fanPath, rmpPath, minPwm, maxPwm, startPwm, overrideMax, propFactor, hysteresis), GetTemperature(tempPath, tempRpmGraph, function, maxPwm, avgTimes, tmpSrv, osrpc, osrpcState) {
 
             };
             void declareFanRpmFromTempGraph();

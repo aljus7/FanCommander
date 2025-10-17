@@ -33,6 +33,10 @@ void JsonConfigReader::readJsonConfig() {
             this -> refresh_interval = conf["settings"]["refreshInterval"].get<int>();
         else
             this -> refresh_interval = 2;
+        if (conf["settings"].contains("oneSensorReadPerCycle"))
+            this->oneSenseReadPc = conf["settings"]["oneSensorReadPerCycle"].get<bool>();
+        else
+            this->oneSenseReadPc = false;
     } else {
         throw invalid_argument("'Settings' object in config should exist.");
     }
@@ -76,6 +80,7 @@ void JsonConfigReader::readJsonConfig() {
 
 void JsonConfigReader::returnJsonConfig(FanControlParam* fanControlParam, SoftwareParam* softwareParam) {
     softwareParam->refreshInterval = this->refresh_interval;
+    softwareParam->oneSenseReadPc = this->oneSenseReadPc;
 
     if (this->name.empty()) {
         throw std::invalid_argument("There are no sensor names set!");
@@ -119,6 +124,7 @@ void JsonConfigReader::printParsedJsonInStdout(FanControlParam* fcp, SoftwarePar
 
     cout << endl << "-------- Found settings: --------" << endl;
     cout << "Refresh interval: " << sp->refreshInterval << endl;
+    cout << "One Sensor Read Per Cycle optimization: " << (sp->refreshInterval ? "ON" : "OFF");
     cout << endl << "Sensors:";
     for (int i = 0; i < fcp->sensorNames.size(); i++) {
         cout << endl << "\tSensor: " << fcp->sensorNames[i] << endl;

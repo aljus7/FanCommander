@@ -8,6 +8,7 @@ using namespace std;
 
 struct SoftwareParam {
     int refreshInterval;
+    bool oneSenseReadPc;
 };
 
 struct FanControlParam {
@@ -34,6 +35,7 @@ class JsonConfigReader {
         string configPath;
 
         int refresh_interval;
+        bool oneSenseReadPc;
 
         vector<string> name;
         vector<string> tempPath;

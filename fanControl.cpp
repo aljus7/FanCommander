@@ -7,13 +7,18 @@
 #include <utility>
 using json = nlohmann::json;
 
-GetTemperature::GetTemperature(vector<string> tempPath, vector<vector<pair<int, int>>> tempRpmGraph, string function, int maxPwm, int avgTimes, TempSensorServer* tmpSrv) {
+GetTemperature::GetTemperature(vector<string> tempPath, vector<vector<pair<int, int>>> tempRpmGraph, string function, int maxPwm, int avgTimes, TempSensorServer* tmpSrv, OneSenseReadPerCycle* oneSensePc, bool osrpcState) {
     if (tempPath.size() == tempRpmGraph.size()) {    
         //this->tempSensor.resize(tempPath.size());
         for (int i = 0; i < tempPath.size(); i++) {
-            if (tempPath[i] != "null" && !tempPath[i].empty())
+            if (tempPath[i] != "null" && !tempPath[i].empty()) {
                 this->tempSensor.emplace_back(ref(tmpSrv->getTempSenseIfstream(tempPath[i])));
+                this->tempSensorNames.emplace_back(tmpSrv->getTempSenseName(tempPath[i]));
+            }
         }
+
+        this->osrpc = oneSensePc;
+        this->osrpcState = osrpcState;
 
         if (!tempRpmGraph.empty()) {
             for (int i = 0; i < tempRpmGraph.size(); i++) {
@@ -79,26 +84,55 @@ int GetTemperature::averaging(int pwm) {
 void GetTemperature::getRpm() {
     vector<int> temps(this->tempSensor.size());
     string tempStr;
-    for(int i = 0; i < this->tempSensor.size(); i++) {
-        // Check if stream is open
-        if (!this->tempSensor[i].get().is_open()) {
-            std::cerr << "Temperature sensor stream " << i << " is not open!" << std::endl;
-            temps[i] = 0;
-            continue;
-        }
-        this->tempSensor[i].get().seekg(0);
-        if (getline(this->tempSensor[i].get(), tempStr)) {
-            try {
-                temps[i] = std::stod(tempStr)/1000;
-            } catch (const std::invalid_argument& e) {
-                std::cerr << "Invalid argument: " << e.what() << std::endl;
-            } catch (const std::out_of_range& e) {
-                std::cerr << "Out of range: " << e.what() << std::endl;
-            }
-        } else {
-            cerr << "Failed to read line " << i << endl;
-        }
 
+    if (this->osrpcState) {
+        for(int i = 0; i < this->tempSensor.size(); i++) {
+            if (!osrpc->isValueSet(this->tempSensorNames[i])) {
+                // Check if stream is open
+                if (!this->tempSensor[i].get().is_open()) {
+                    std::cerr << "Temperature sensor stream " << i << " is not open!" << std::endl;
+                    temps[i] = 0;
+                    continue;
+                }
+                this->tempSensor[i].get().seekg(0);
+                if (getline(this->tempSensor[i].get(), tempStr)) {
+                    try {
+                        temps[i] = std::stod(tempStr)/1000;
+                        osrpc->setValue(this->tempSensorNames[i], temps[i]);
+                    } catch (const std::invalid_argument& e) {
+                        std::cerr << "Invalid argument: " << e.what() << std::endl;
+                    } catch (const std::out_of_range& e) {
+                        std::cerr << "Out of range: " << e.what() << std::endl;
+                    }
+                } else {
+                    cerr << "Failed to read line " << i << endl;
+                }
+            } else {
+                temps[i] = osrpc->getSetValue();
+                //cout << "Setting saved value " << temps[i] << endl;
+            }
+        }
+    } else {
+        for(int i = 0; i < this->tempSensor.size(); i++) {
+            // Check if stream is open
+            if (!this->tempSensor[i].get().is_open()) {
+                std::cerr << "Temperature sensor stream " << i << " is not open!" << std::endl;
+                temps[i] = 0;
+                continue;
+            }
+            this->tempSensor[i].get().seekg(0);
+            if (getline(this->tempSensor[i].get(), tempStr)) {
+                try {
+                    temps[i] = std::stod(tempStr)/1000;
+                } catch (const std::invalid_argument& e) {
+                    std::cerr << "Invalid argument: " << e.what() << std::endl;
+                } catch (const std::out_of_range& e) {
+                    std::cerr << "Out of range: " << e.what() << std::endl;
+                }
+            } else {
+                cerr << "Failed to read line " << i << endl;
+            }
+    }
     }
 
 
@@ -605,4 +639,41 @@ ifstream& TempSensorServer::getTempSenseIfstream(const string &sensorPath) {
         }
     }
     throw std::runtime_error("Sensor path not found: " + sensorPath);
+}
+
+string TempSensorServer::getTempSenseName(const string &sensorPath) {
+    for (auto& tempSensPair : this->tempSensor) {
+        if (tempSensPair.first == sensorPath) {
+            return tempSensPair.first;
+        }
+    }
+    throw std::runtime_error("Sensor path not found: " + sensorPath);
+}
+
+bool OneSenseReadPerCycle::isValueSet(string& senseName) {
+    if (this->savedValues.size() > 0) {
+        bool ret = false;
+        for (auto& valuePair : this->savedValues) {
+            if (valuePair.first == senseName) {
+                this->nextReturnValue = valuePair.second;
+                ret = true;
+                break;
+            }
+        }
+        return ret;
+    } else {
+        return false;
+    }
+}
+
+int& OneSenseReadPerCycle::getSetValue() {
+    return this->nextReturnValue;
+}
+
+void OneSenseReadPerCycle::setValue(string& senseName, int val) {
+    this->savedValues.emplace_back(senseName, val);
+}
+
+void OneSenseReadPerCycle::resetAllSavedValues() {
+    this->savedValues.clear();
 }
