@@ -62,14 +62,19 @@ int main() {
         fanControlParam->minPwms[i], fanControlParam->maxPwms[i], fanControlParam->startPwms[i], fanControlParam->avgTimes[i], senServ, fanControlParam->overrideMax[i], fanControlParam->proportionalFactor[i], fanControlParam->hysteresis[i]));
     }
 
-    int refreshTime = softwareParam->refreshInterval;
+    int balancedRefreshTime = 0;
+    if (setFans.size() > 0) {
+        balancedRefreshTime = softwareParam->refreshInterval / setFans.size();
+    } else {
+        throw std::runtime_error("No fans found!");
+    }
 
     while (keepRunning) {
         for (auto &fan : setFans) {
             fan->declareFanRpmFromTempGraph();
             fan->setFanSpeedFromDeclaredRpm();
+            this_thread::sleep_for(std::chrono::milliseconds(balancedRefreshTime));
         }
-        this_thread::sleep_for(std::chrono::milliseconds(refreshTime));
     }
 
     std::cout << "Exiting...\n";
