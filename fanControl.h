@@ -15,7 +15,7 @@ using namespace std;
 
     class OneSenseReadPerCycle {
         private:
-            vector<pair<string, int>> savedValues;
+            unordered_map<string, int> savedValues;
             int nextReturnValue;
         public:
             bool isValueSet(string& senseName);
@@ -27,7 +27,7 @@ using namespace std;
     class TempSensorServer {
         private:
             list<ifstream> tempSensorStreams;
-            vector<pair<string, reference_wrapper<ifstream>>> tempSensor;
+            unordered_map<string, reference_wrapper<ifstream>> tempSensor;
             vector<pair<string, string>> tempSensorNamePathCoor;
         protected:
 

@@ -606,12 +606,11 @@ TempSensorServer::TempSensorServer(vector<string> tempPaths, vector<string> sens
                     tempSensorStreams.pop_back();
                     throw std::runtime_error("Failed to open file: " + path);
                 }
-                this->tempSensor.push_back(make_pair(path, ref(tempSensorStreams.back())));
+                this->tempSensor.emplace(path, ref(tempSensorStreams.back()));
             } else {
-                for(int j = 0; j < this->tempSensor.size(); j++) {
-                    if(path == tempSensor[j].first) {
-                        match = true;
-                    } 
+                auto val = this->tempSensor.find(path);
+                if (val != this->tempSensor.end()) {
+                    match = true;
                 }
                 if (!match) {
                     this->tempSensorStreams.emplace_back(path, ios::in);
@@ -619,7 +618,7 @@ TempSensorServer::TempSensorServer(vector<string> tempPaths, vector<string> sens
                         tempSensorStreams.pop_back();
                         throw std::runtime_error("Failed to open file: " + path);
                     }
-                    this->tempSensor.push_back(make_pair(path, ref(this->tempSensorStreams.back())));
+                    this->tempSensor.emplace(path, ref(this->tempSensorStreams.back()));
                 }
             }
         }
@@ -630,15 +629,17 @@ TempSensorServer::TempSensorServer(vector<string> tempPaths, vector<string> sens
 }
 
 ifstream& TempSensorServer::getTempSenseIfstream(const string &sensorPath) {
-    for (auto& tempSensPair : this->tempSensor) {
-        if (tempSensPair.first == sensorPath) {
-            if (!tempSensPair.second.get().is_open()) {
-                throw std::runtime_error("Sensor stream for path " + sensorPath + " is not open!");
-            }
-            return tempSensPair.second.get();
-        }
+    auto it = this->tempSensor.find(sensorPath);
+    if (it == this->tempSensor.end()) {
+        throw std::runtime_error("Sensor path not found: " + sensorPath);
     }
-    throw std::runtime_error("Sensor path not found: " + sensorPath);
+
+    ifstream& stream = it->second.get();
+    if (!stream.is_open()) {
+        throw std::runtime_error("Sensor stream for path " + sensorPath + " is not open!");
+    }
+
+    return stream;
 }
 
 string TempSensorServer::getTempSenseName(const string &sensorPath) {
@@ -651,19 +652,12 @@ string TempSensorServer::getTempSenseName(const string &sensorPath) {
 }
 
 bool OneSenseReadPerCycle::isValueSet(string& senseName) {
-    if (this->savedValues.size() > 0) {
-        bool ret = false;
-        for (auto& valuePair : this->savedValues) {
-            if (valuePair.first == senseName) {
-                this->nextReturnValue = valuePair.second;
-                ret = true;
-                break;
-            }
-        }
-        return ret;
-    } else {
-        return false;
+    auto it = savedValues.find(senseName);
+    if (it != savedValues.end()) {
+        nextReturnValue = it->second;
+        return true;
     }
+    return false;
 }
 
 int& OneSenseReadPerCycle::getSetValue() {
@@ -671,7 +665,7 @@ int& OneSenseReadPerCycle::getSetValue() {
 }
 
 void OneSenseReadPerCycle::setValue(string& senseName, int val) {
-    this->savedValues.emplace_back(senseName, val);
+    this->savedValues[senseName] = val;
 }
 
 void OneSenseReadPerCycle::resetAllSavedValues() {
