@@ -106,7 +106,7 @@ int main() {
     delete jsonConfigReader;
     delete fanControlParam;
     delete softwareParam;
-
+    delete oneRead;
     
     return 0;
 
