@@ -106,8 +106,8 @@ int main() {
     vector<string> fanFixedControl;
     vector<string> fanFixedRpm;
 
-    for (const auto& sensorName : fanControlParam->sensorNames) {
-        size_t index = &sensorName - &fanControlParam->sensorNames[0];
+    for (const auto& sensorName : fanControlParam->tempNames) {
+        size_t index = &sensorName - &fanControlParam->tempNames[0];
         string fixedPath = find_hwmon(sensorName, fanControlParam->tempPaths[index]);
         sensorFixedPaths.push_back(fixedPath);
     }
