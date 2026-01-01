@@ -7,7 +7,7 @@ Run ```sensors-detect``` in terminal.
 This will detect all of the sensors present and they will be used for fancontrol. After that, run the following to check if it detected the sensors correctly:
 
 lm-sensors
-Warning
+Warning: <br>
 The following command is safe by default (pressing Enter at each prompt). Some advanced options may damage hardware: only modify the defaults if you understand the implications.
 The first thing to do is to run****
 ``` bash
@@ -35,8 +35,8 @@ If the output does not display an RPM value for the CPU fan, one may need to #In
 ### Must do:
 The enumerated hwmon symlinks located in /sys/class/hwmon/ might vary in order because the kernel modules do not load in a consistent order per boot. Because of this, it may cause FanCommander to not function correctly.
 
-Solution
-In /etc/conf.d/lm_sensors, there are 2 arrays that list all of the modules detected when you execute sensors-detect. These get loaded in by fancontrol. If the file does not exist, run sensors-detect as root, accepting the defaults. Open (or create) /etc/modules-load.d/modules.conf. Get all of the modules listed from the 2 variables in /etc/conf.d/lm_sensors and place them into the /etc/modules-load.d/modules.conf file, one module per line. Specifying them like this should make a defined order for the modules to load in, which should make the hwmon paths stay where they are and not change orders for every boot. If this does not work, I highly recommend finding another program to control your fans.
+Solution: <br>
+In /etc/conf.d/lm_sensors, there are 2 arrays that list all of the modules detected when you execute sensors-detect. These get loaded in by fancontrol. If the file does not exist, run sensors-detect as root, accepting the defaults (clicking enter). Open (or create) /etc/modules-load.d/modules.conf. Get all of the modules listed from the 2 variables in /etc/conf.d/lm_sensors and place them into the /etc/modules-load.d/modules.conf file, one module per line. Specifying them like this should make a defined order for the modules to load in, which should make the hwmon paths stay where they are and not change orders for every boot. If this does not work, I highly recommend finding another program to control your fans.
 
 *** Source: ArchWiki; https://wiki.archlinux.org/title/Fan_speed_control; 25.6.2025 ***
 
