@@ -45,6 +45,7 @@ void JsonConfigReader::readJsonConfig() {
         for (const auto &sensor : conf["tempSensors"]) {
             this->name.push_back(sensor["sensor"].get<string>());
             this->tempPath.push_back(sensor["path"].get<string>());
+            this->tempNames.push_back(sensor["deviceName"].get<string>());
             vector<pair<int, int>> temps;
             for (const auto &graph : sensor["graph"]) {
                 temps.push_back(make_pair(graph["temp"].get<int>(), graph["pwm"].get<int>()));
@@ -59,6 +60,7 @@ void JsonConfigReader::readJsonConfig() {
         for (const auto& fan : conf["fans"]) {
             this->fanControlPath.push_back(fan["fanControlPath"].get<string>());
             this->fanRpmPath.push_back(fan["fanRpmPath"].get<string>());
+            this->fanControlerNames.push_back(fan["deviceName"].get<string>());
             vector<string> sensors;
             for (const auto &sensor : fan["sensors"]) {
                 sensors.push_back(sensor.get<string>());
@@ -100,10 +102,12 @@ void JsonConfigReader::returnJsonConfig(FanControlParam* fanControlParam, Softwa
     }
     fanControlParam->sensorNames = this->name;
     fanControlParam->tempPaths = this->tempPath;
+    fanControlParam->tempNames = this->tempNames;
     fanControlParam->tempRpmGraphs = this->tempRpmGraph;
 
     fanControlParam->fanControlPaths = this->fanControlPath;
     fanControlParam->fanRpmPaths = this->fanRpmPath;
+    fanControlParam->fanControlerNames = this->fanControlerNames;
     fanControlParam->sensors = this->sensors;
     fanControlParam->sensorFunctions = this->sensorFunc;
     fanControlParam->avgTimes = this->avgTimes;
@@ -129,6 +133,7 @@ void JsonConfigReader::printParsedJsonInStdout(FanControlParam* fcp, SoftwarePar
     for (int i = 0; i < fcp->sensorNames.size(); i++) {
         cout << endl << "\tSensor: " << fcp->sensorNames[i] << endl;
         cout << "\tSensor path: " << fcp->tempPaths[i] << endl;
+        cout << "\tDevice name: " << fcp->tempNames[i] << endl;
         cout << "\tTemp / Rpm graph:" << endl;
         vector<pair<int, int>> vals = fcp->tempRpmGraphs[i];
         for (const auto &pair : vals) {
@@ -140,6 +145,7 @@ void JsonConfigReader::printParsedJsonInStdout(FanControlParam* fcp, SoftwarePar
         cout << endl << "Fan" << i << ":" << endl;
         cout << "\tFan control path: " << fcp->fanControlPaths[i] << endl;
         cout << "\tFan rpm path: " << fcp->fanRpmPaths[i] << endl;
+        cout << "\tFan device name: " << fcp->fanControlerNames[i] << endl;
         cout << "\tFan uses sensors: ";
         vector sensorss = fcp->sensors[i];
         for(string sensor : sensorss) {

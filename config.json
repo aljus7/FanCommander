@@ -8,6 +8,7 @@
         {
             "sensor": "CPU",
             "path": "/sys/class/hwmon/hwmon3/temp1_input",
+            "deviceName": "kakiBaki",
             "graph": [
                 {"temp": 48, "pwm": 85},
                 {"temp": 50, "pwm": 100},
@@ -18,6 +19,7 @@
         {
             "sensor": "GPU",
             "path": "/sys/class/hwmon/hwmon6/temp1_input",
+            "deviceName": "kakiBaki2",
             "graph": [
                 {"temp": 48, "pwm": 90},
                 {"temp": 50, "pwm": 100},
@@ -31,6 +33,7 @@
         {
             "fanControlPath": "/sys/class/hwmon/hwmon4/pwm4",
             "fanRpmPath": "/sys/class/hwmon/hwmon4/fan4_input",
+            "deviceName": "kakiBakiFan",
             "sensors": ["GPU", "CPU"],
             "sensorFunction": "max",
             "averageSampleSize" : 10,
@@ -44,6 +47,7 @@
         {
             "fanControlPath": "/sys/class/hwmon/hwmon4/pwm1",
             "fanRpmPath": "/sys/class/hwmon/hwmon4/fan1_input",
+            "deviceName": "kakiBakiFan2",
             "sensors": ["GPU", "CPU"],
             "sensorFunction": "max",
             "averageSampleSize" : 10,
