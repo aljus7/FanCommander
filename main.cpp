@@ -36,12 +36,12 @@ string find_hwmon(const string& target_name, const string& targetPath) {
     string basePath;
 
     if (target_name.empty()) {
-        cout << endl << "Info: Empty target name provided to find_hwmon(). Returning provided path as fixed." << endl;
+        cout << "Info: Empty target name provided to find_hwmon(). Returning provided path as fixed: " << targetPath << endl;
         return targetPath;
     }
 
     if (targetPath.empty()) {
-        cout << endl << "Info: Empty target path provided to find_hwmon(). Cannot fix path for sensor name \"" << target_name << "\". Returning empty string." << endl;
+        cout << "Info: Empty target path provided to find_hwmon(). Target name: " << target_name << endl;
         throw std::invalid_argument("Empty target path provided to find_hwmon().");
     }
 
@@ -54,7 +54,7 @@ string find_hwmon(const string& target_name, const string& targetPath) {
             throw std::invalid_argument("Provided path \"" + targetPath + "\" is not a valid hwmon path.");
         }
     } else {
-        cout << endl << "Info: Provided path \"" << targetPath << "\" is not a hwmon path." << endl;
+        cout << "Info: Provided path \"" << targetPath << "\" is not a hwmon path." << endl;
         return targetPath;
     }
 
@@ -83,7 +83,7 @@ string find_hwmon(const string& target_name, const string& targetPath) {
         }
     }
 
-    cout << endl << "Mild error: Could not find hwmon directory for sensor name \"" << target_name << "\". Using provided path instead: " << targetPath << endl;
+    cout << "Mild error: Could not find hwmon directory for sensor name \"" << target_name << "\". Using provided path instead: " << targetPath << endl;
     return targetPath;
 }
 
