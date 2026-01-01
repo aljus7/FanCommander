@@ -205,10 +205,14 @@ int GetTemperature::getFanRpm() {
     }
 }
 
-FanControl::FanControl(string fanPath, string rpmPath, int minPwm, int maxPwm, int startPwm, bool overrideMax, double propFactor, double hysteresis) {
+FanControl::FanControl(string fanPath, string fanNamePathOriginal, string rpmPath, int minPwm, int maxPwm, int startPwm, bool overrideMax, double propFactor, double hysteresis) {
 
     if (!fanPath.empty() && !rpmPath.empty()) {
         this->fanNamePath = fanPath;
+        this->fanNamePathOriginal = fanNamePathOriginal;
+        if (fanNamePathOriginal.empty()) {
+            throw std::invalid_argument("Fan control path is empty, make shure to provide valid fan path.");
+        }
         this->fanControl.open(fanPath);
         if(fanControl.is_open()) {
             cout << "Fan control: " << fanPath << " successfully open!" << endl;
@@ -250,7 +254,11 @@ FanControl::FanControl(string fanPath, string rpmPath, int minPwm, int maxPwm, i
     this->propFactor = propFactor;
 
     regex nonDigit("[^0-9]+");
-    string autoGenFileName = this->stateFilesPath + regex_replace(this->fanNamePath, nonDigit, "") + this->autoGenFileAppend;
+    string autoGenFileName = this->stateFilesPath + regex_replace(this->fanNamePathOriginal, nonDigit, "") + this->autoGenFileAppend;
+
+    if (autoGenFileName.empty()) {
+        throw std::invalid_argument("Fan control file doesent contain any digits to create unique auto gen file name. Feel free to MR this issue with better solution.");
+    }
 
     std::ifstream checkFile(autoGenFileName);
     bool fileExists = checkFile.good();

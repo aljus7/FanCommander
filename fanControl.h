@@ -63,6 +63,7 @@ using namespace std;
         private:
             string const autoGenFileAppend = "_fanSettings";
             string fanNamePath;
+            string fanNamePathOriginal;
             const string stateFilesPath = "/var/lib/fanCommander/";
 
             ofstream fanControl;
@@ -99,8 +100,8 @@ using namespace std;
         protected:
 
         public:
-            SetFans(vector<string> tempPath, vector<vector<pair<int, int>>> tempRpmGraph, string function, string fanPath, string rmpPath, int minPwm, int maxPwm, int startPwm, int avgTimes, TempSensorServer *tmpSrv, bool overrideMax, double propFactor, double hysteresis, OneSenseReadPerCycle* osrpc, bool osrpcState) : 
-            FanControl(fanPath, rmpPath, minPwm, maxPwm, startPwm, overrideMax, propFactor, hysteresis), GetTemperature(tempPath, tempRpmGraph, function, maxPwm, avgTimes, tmpSrv, osrpc, osrpcState) {
+            SetFans(vector<string> tempPath, vector<vector<pair<int, int>>> tempRpmGraph, string function, string fanPath, string rmpPath, int minPwm, int maxPwm, int startPwm, int avgTimes, TempSensorServer *tmpSrv, bool overrideMax, double propFactor, double hysteresis, OneSenseReadPerCycle* osrpc, bool osrpcState, String fanNamePathOriginal) : 
+            FanControl(fanPath, fanNamePathOriginal, rmpPath, minPwm, maxPwm, startPwm, overrideMax, propFactor, hysteresis), GetTemperature(tempPath, tempRpmGraph, function, maxPwm, avgTimes, tmpSrv, osrpc, osrpcState) {
 
             };
             void declareFanRpmFromTempGraph();
