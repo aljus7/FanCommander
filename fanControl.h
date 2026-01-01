@@ -88,7 +88,7 @@ using namespace std;
 
             int feedBackRpm;
         public: 
-            FanControl(string fanPath, string rpmPath, int minPwm, int maxPwm, int startPwm, bool overrideMax, double propFactor, double hysteresis);
+            FanControl(string fanPath, string fanNamePathOriginal, string rpmPath, int minPwm, int maxPwm, int startPwm, bool overrideMax, double propFactor, double hysteresis);
             void setFanSpeed(int pwm);
             void getFeedbackRpm();
             ~FanControl();
