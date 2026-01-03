@@ -17,6 +17,8 @@ GetTemperature::GetTemperature(vector<string> tempPath, vector<vector<pair<int, 
             }
         }
 
+        this->tempSensorPaths = tempPath;
+
         this->osrpc = oneSensePc;
         this->osrpcState = osrpcState;
 
@@ -105,7 +107,10 @@ void GetTemperature::getRpm() {
                         std::cerr << "Out of range: " << e.what() << std::endl;
                     }
                 } else {
-                    cerr << "Failed to read line " << i << endl;
+                    cerr << "Failed to read line (trying to reopen)" << i << endl;
+                    this->tempSensor[i].get().close();
+                    this->tempSensor[i].get().open(this->tempSensorPaths[i]);
+                    i = i - 1; // retry reading
                 }
             } else {
                 temps[i] = osrpc->getSetValue();
@@ -130,7 +135,10 @@ void GetTemperature::getRpm() {
                     std::cerr << "Out of range: " << e.what() << std::endl;
                 }
             } else {
-                cerr << "Failed to read line " << i << endl;
+                cerr << "Failed to read line (trying to reopen)" << i << endl;
+                this->tempSensor[i].get().close();
+                this->tempSensor[i].get().open(this->tempSensorPaths[i]);
+                i = i - 1; // retry reading
             }
     }
     }
@@ -482,18 +490,21 @@ void FanControl::waitForFanRpmToStabilize() {
 void FanControl::getFeedbackRpm() {
     string rpmString;
     int fanRpm;
-    bool rpmReadErr = false;
 
     if (this->rpmSensor.is_open()) {
         this->rpmSensor.seekg(0);
         if (getline(this->rpmSensor, rpmString)) {
             fanRpm = stod(rpmString);
         } else {
-            rpmReadErr = true;
             this->rpmSensor.close();
             this->rpmSensor.open(this->rpmPath);
             if (!this->rpmSensor.is_open()) {
                 throw std::runtime_error("Failed to reopen fan rpm feedback file.");
+            }
+            if (getline(this->rpmSensor, rpmString)) {
+                fanRpm = stod(rpmString);
+            } else {
+                throw std::runtime_error("Failed to read line from reopened fan rpm feedback file.");
             }
             cerr << "couldnt getline from rpm fan feedback file, auto fixing was done by reopening file." << endl;
         }
@@ -501,9 +512,7 @@ void FanControl::getFeedbackRpm() {
         throw std::runtime_error("Failed to open fan rpm feedback file.");
     }
 
-    if (!rpmReadErr) {
-        this->feedBackRpm = fanRpm;
-    }
+    this->feedBackRpm = fanRpm;
 }
 
 void FanControl::setFanSpeed(int pwm) {

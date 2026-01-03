@@ -42,6 +42,7 @@ using namespace std;
             vector<int> fanRpm;
             vector<reference_wrapper<ifstream>> tempSensor;
             vector<string> tempSensorNames;
+            vector<string> tempSensorPaths;
             vector<vector<pair<int, int>>> tempRpmGraph;
             string function;
             vector<int> rpms;
