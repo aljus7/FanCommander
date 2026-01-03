@@ -221,6 +221,7 @@ FanControl::FanControl(string fanPath, string fanNamePathOriginal, string rpmPat
         }
         this->rpmSensor.open(rpmPath);
         if (rpmSensor.is_open()) {
+            this->rpmPath = rpmPath;
             cout << "Fan sensor: " << rpmPath << " sucessfully open!" << endl;
         } else {
             throw std::runtime_error("Failed to open rpm sensor file.");
@@ -481,20 +482,28 @@ void FanControl::waitForFanRpmToStabilize() {
 void FanControl::getFeedbackRpm() {
     string rpmString;
     int fanRpm;
+    boolean rpmReadErr = false;
 
     if (this->rpmSensor.is_open()) {
         this->rpmSensor.seekg(0);
         if (getline(this->rpmSensor, rpmString)) {
             fanRpm = stod(rpmString);
         } else {
-            cerr << "couldnt getline from rpm fan feedback file" << endl;
-            fanRpm = 255;
+            rpmReadErr = true;
+            this->rpmSensor.close();
+            this->rpmSensor.open(this->rpmPath);
+            if (!this->rpmSensor.is_open()) {
+                throw std::runtime_error("Failed to reopen fan rpm feedback file.");
+            }
+            cerr << "couldnt getline from rpm fan feedback file, auto fixing was done by reopening file." << endl;
         }
     } else {
         throw std::runtime_error("Failed to open fan rpm feedback file.");
     }
 
-    this->feedBackRpm = fanRpm;
+    if (!rpmReadErr) {
+        this->feedBackRpm = fanRpm;
+    }
 }
 
 void FanControl::setFanSpeed(int pwm) {

@@ -66,6 +66,8 @@ using namespace std;
             string fanNamePathOriginal;
             const string stateFilesPath = "/var/lib/fanCommander/";
 
+            string rpmPath;
+ 
             ofstream fanControl;
             ifstream rpmSensor;
             fstream fanSettingsAutoGenFile;

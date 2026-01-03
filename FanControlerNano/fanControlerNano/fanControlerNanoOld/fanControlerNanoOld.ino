@@ -12,12 +12,10 @@
 #define PWM_FREQ_HZ   25000
 
 // Volatile variables for interrupts
-volatile unsigned long pulse_times1[50];
-volatile int pulse_index1 = 0;
-volatile unsigned long pulse_times2[50];
-volatile int pulse_index2 = 0;
-volatile unsigned long last_pulse1 = 0;
-volatile unsigned long last_pulse2 = 0;
+volatile unsigned long last_tach1_time = 0;
+volatile unsigned long last_tach2_time = 0;
+volatile unsigned long tach_count1 = 0;
+volatile unsigned long tach_count2 = 0;
 
 // Measured values
 unsigned int rpm1 = 0;
@@ -68,35 +66,21 @@ void setup() {
   setPwmRaw(2, 180);
 }
 
-// ── Calculate RPM from pulse times ───────────────────────────────
-unsigned int calculate_rpm(volatile unsigned long times[], volatile int index, volatile unsigned long last_pulse) {
-  unsigned long now = micros();
-  unsigned long diff = now - last_pulse;
-  if (diff > 2000000UL) return 0;  // No pulse in 2s, assume stopped
-  if (index < 2) return 0;
-  unsigned long sum = 0;
-  int count = 0;
-  for (int i = 1; i < 50 && i < index; i++) {
-    int curr_idx = (index - i + 50) % 50;
-    int prev_idx = (index - i - 1 + 50) % 50;
-    unsigned long period = times[curr_idx] - times[prev_idx];
-    if (period > 0 && period < 100000) {  // Valid period: >0 and <100ms
-      sum += period;
-      count++;
-    }
-  }
-  if (count == 0 || sum == 0) return 0;
-  unsigned long avg_period_us = sum / count;
-  if (avg_period_us == 0) return 0;
-  return 60000000UL / (avg_period_us * 4);
-}
-
 void loop() {
-  // Update RPM every ~100 ms
+  // Update RPM every ~800 ms
   static unsigned long last_rpm_calc = 0;
-  if (millis() - last_rpm_calc >= 100) {
-    rpm1 = calculate_rpm(pulse_times1, pulse_index1, last_pulse1);
-    rpm2 = calculate_rpm(pulse_times2, pulse_index2, last_pulse2);
+  if (millis() - last_rpm_calc >= 800) {
+    noInterrupts();
+    unsigned long pulses1 = tach_count1;
+    unsigned long pulses2 = tach_count2;
+    tach_count1 = 0;
+    tach_count2 = 0;
+    interrupts();
+
+    // 2 pulses per revolution (most common)
+    rpm1 = (pulses1 * 60 * 1000UL) / (2 * 800);
+    rpm2 = (pulses2 * 60 * 1000UL) / (2 * 800);
+
     last_rpm_calc = millis();
   }
 
@@ -152,16 +136,18 @@ void loop() {
 // ── Interrupts ───────────────────────────────────────────────────
 void tach_isr_1() {
   unsigned long now = micros();
-  pulse_times1[pulse_index1] = now;
-  last_pulse1 = now;
-  pulse_index1 = (pulse_index1 + 1) % 50;
+  if (now - last_tach1_time > 2000) {
+    tach_count1++;
+    last_tach1_time = now;
+  }
 }
 
 void tach_isr_2() {
   unsigned long now = micros();
-  pulse_times2[pulse_index2] = now;
-  last_pulse2 = now;
-  pulse_index2 = (pulse_index2 + 1) % 50;
+  if (now - last_tach2_time > 2000) {
+    tach_count2++;
+    last_tach2_time = now;
+  }
 }
 
 // ── Set PWM for fan 1 or 2 ───────────────────────────────────────
