@@ -482,7 +482,7 @@ void FanControl::waitForFanRpmToStabilize() {
 void FanControl::getFeedbackRpm() {
     string rpmString;
     int fanRpm;
-    boolean rpmReadErr = false;
+    bool rpmReadErr = false;
 
     if (this->rpmSensor.is_open()) {
         this->rpmSensor.seekg(0);
